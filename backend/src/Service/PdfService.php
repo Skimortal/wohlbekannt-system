@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\CompanySettings;
+use App\Entity\Invoice;
 use App\Entity\Quote;
 use App\Repository\CompanySettingsRepository;
 use Symfony\Component\Mime\Part\DataPart;
@@ -33,6 +34,21 @@ class PdfService
 
         $html = $this->twig->render('pdf/quote.html.twig', [
             'quote' => $quote,
+            'company' => $settings,
+            'logoName' => $logoFile ? basename($logoFile) : null,
+        ]);
+        $footer = $this->twig->render('pdf/_footer.html.twig', ['company' => $settings]);
+
+        return $this->htmlToPdf($html, $footer, $logoFile);
+    }
+
+    public function renderInvoice(Invoice $invoice): string
+    {
+        $settings = $this->settingsRepo->findOneBy([]) ?? new CompanySettings();
+        $logoFile = $this->logoFile($settings);
+
+        $html = $this->twig->render('pdf/invoice.html.twig', [
+            'invoice' => $invoice,
             'company' => $settings,
             'logoName' => $logoFile ? basename($logoFile) : null,
         ]);
