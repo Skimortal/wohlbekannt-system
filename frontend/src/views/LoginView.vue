@@ -26,45 +26,44 @@ async function submit() {
 </script>
 
 <template>
-  <div class="flex min-h-svh items-center justify-center bg-sand-50 px-4">
-    <form
-      class="w-full max-w-sm rounded-2xl border border-line bg-paper p-8 shadow-sm"
-      @submit.prevent="submit"
-    >
-      <img src="/logo.svg" alt="wohlbekannt" class="mb-2 h-12 w-auto" />
-      <p class="mb-6 text-sm text-ink-soft">Angebote &amp; Rechnungen</p>
+  <div class="flex min-h-svh">
+    <!-- form side -->
+    <div class="flex w-full flex-col justify-center bg-paper px-6 py-12 lg:w-[460px] lg:px-14">
+      <div class="mx-auto w-full max-w-sm">
+        <img src="/logo.svg" alt="wohlbekannt" class="mb-10 h-12 w-auto" />
+        <h1 class="text-2xl font-semibold tracking-tight text-ink">Willkommen zurück</h1>
+        <p class="mb-8 mt-1 text-sm text-ink-soft">Bitte melden Sie sich an.</p>
 
-      <label class="mb-1 block text-sm font-medium text-ink">E-Mail</label>
-      <input
-        v-model="email"
-        type="email"
-        required
-        autocomplete="username"
-        class="mb-4 w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-sand"
-      />
+        <form @submit.prevent="submit">
+          <label class="label">E-Mail</label>
+          <input v-model="email" type="email" required autocomplete="username" class="input mb-4" />
 
-      <label class="mb-1 block text-sm font-medium text-ink">Passwort</label>
-      <input
-        v-model="password"
-        type="password"
-        required
-        autocomplete="current-password"
-        class="mb-4 w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-sand"
-      />
+          <label class="label">Passwort</label>
+          <input v-model="password" type="password" required autocomplete="current-password" class="input mb-4" />
 
-      <p v-if="error" class="mb-4 text-sm text-red-600">{{ error }}</p>
+          <p v-if="error" class="mb-4 text-sm text-red-600">{{ error }}</p>
 
-      <button
-        type="submit"
-        :disabled="loading"
-        class="w-full rounded-lg bg-ink py-2 font-medium text-paper transition hover:opacity-90 disabled:opacity-50"
-      >
-        {{ loading ? 'Anmelden…' : 'Anmelden' }}
-      </button>
+          <button type="submit" :disabled="loading" class="btn-primary w-full">
+            {{ loading ? 'Anmelden…' : 'Anmelden' }}
+          </button>
 
-      <div class="mt-4 text-center">
-        <RouterLink to="/passwort-vergessen" class="text-sm text-ink-soft hover:text-ink">Passwort vergessen?</RouterLink>
+          <div class="mt-4 text-center">
+            <RouterLink to="/passwort-vergessen" class="text-sm text-ink-soft hover:text-ink">Passwort vergessen?</RouterLink>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
+
+    <!-- image side -->
+    <div class="relative hidden flex-1 lg:block">
+      <img src="/login-bg.webp" alt="" class="absolute inset-0 h-full w-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent"></div>
+      <div class="absolute inset-x-0 bottom-0 p-12">
+        <p class="max-w-md text-2xl font-medium leading-snug text-paper drop-shadow">
+          Mobile Bar &amp; Event-Catering aus Tirol.
+        </p>
+        <p class="mt-2 text-sm text-paper/80">Angebote &amp; Rechnungen — alles an einem Ort.</p>
+      </div>
+    </div>
   </div>
 </template>
