@@ -61,6 +61,10 @@ async function submit() {
       >
         {{ loading ? 'Anmelden…' : 'Anmelden' }}
       </button>
+
+      <div class="mt-4 text-center">
+        <RouterLink to="/passwort-vergessen" class="text-sm text-ink-soft hover:text-ink">Passwort vergessen?</RouterLink>
+      </div>
     </form>
   </div>
 </template>

@@ -12,7 +12,7 @@ const error = ref('')
 const form = reactive<any>(blank())
 
 function blank() {
-  return { id: null, name: '', email: '', role: 'user', active: true, password: '' }
+  return { id: null, name: '', email: '', role: 'user', active: true, password: '', passwordRepeat: '' }
 }
 const ROLE_LABEL: Record<string, string> = { admin: 'Administrator', user: 'Mitarbeiter' }
 
@@ -34,8 +34,23 @@ function openEdit(u: any) {
 }
 
 async function save() {
-  saving.value = true
   error.value = ''
+  // Password required on create, optional on edit. Validate when set.
+  if (!form.id && !form.password) {
+    error.value = 'Bitte ein Passwort vergeben.'
+    return
+  }
+  if (form.password) {
+    if (form.password.length < 8) {
+      error.value = 'Das Passwort muss mindestens 8 Zeichen lang sein.'
+      return
+    }
+    if (form.password !== form.passwordRepeat) {
+      error.value = 'Die Passwörter stimmen nicht überein.'
+      return
+    }
+  }
+  saving.value = true
   try {
     const payload: any = { name: form.name, email: form.email, role: form.role, active: form.active }
     if (form.password) payload.password = form.password
@@ -111,9 +126,13 @@ onMounted(load)
             <input v-model="form.active" type="checkbox" :disabled="form.id === meId" /> aktiv
           </label>
         </div>
-        <div class="col-span-2">
-          <label class="label">{{ form.id ? 'Neues Passwort (leer lassen = unverändert)' : 'Passwort' }}</label>
-          <input v-model="form.password" type="text" class="input" :placeholder="form.id ? '••••••' : ''" />
+        <div>
+          <label class="label">{{ form.id ? 'Neues Passwort' : 'Passwort' }}</label>
+          <input v-model="form.password" type="password" autocomplete="new-password" class="input" :placeholder="form.id ? 'leer = unverändert' : 'mind. 8 Zeichen'" />
+        </div>
+        <div>
+          <label class="label">Passwort wiederholen</label>
+          <input v-model="form.passwordRepeat" type="password" autocomplete="new-password" class="input" />
         </div>
       </div>
       <p v-if="error" class="mt-3 text-sm text-red-600">{{ error }}</p>
