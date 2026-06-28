@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
+import Modal from '../components/Modal.vue'
 import api from '../api'
 import { centsToInput, eur, isoDate, toCents } from '../lib/format'
 import { computeTotals, parseQty, type EditorItem } from '../lib/totals'
@@ -16,6 +17,9 @@ const customers = ref<any[]>([])
 const articles = ref<any[]>([])
 const saving = ref(false)
 const id = ref<number | null>(null)
+const showInvoiceModal = ref(false)
+const optionalItems = ref<{ id: number; title: string; lineGross: number }[]>([])
+const selectedOptional = reactive<Record<number, boolean>>({})
 
 const form = reactive<any>({
   customerId: null,
@@ -114,9 +118,22 @@ async function decide(action: 'accept' | 'decline') {
   const { data } = await api.post(`/api/quotes/${id.value}/${action}`)
   apply(data)
 }
-async function createInvoice() {
-  const { data } = await api.post(`/api/invoices/from-quote/${id.value}`)
+function createInvoice() {
+  if (optionalItems.value.length) {
+    optionalItems.value.forEach((it) => (selectedOptional[it.id] = false))
+    showInvoiceModal.value = true
+  } else {
+    doCreateInvoice([])
+  }
+}
+async function doCreateInvoice(includeOptionalItemIds: number[]) {
+  const { data } = await api.post(`/api/invoices/from-quote/${id.value}`, { includeOptionalItemIds })
   router.push(`/rechnungen/${data.id}`)
+}
+function confirmCreateInvoice() {
+  const ids = optionalItems.value.filter((it) => selectedOptional[it.id]).map((it) => it.id)
+  showInvoiceModal.value = false
+  doCreateInvoice(ids)
 }
 
 function apply(q: any) {
@@ -137,6 +154,9 @@ function apply(q: any) {
     quantity: String(it.quantity).replace('.', ','), unit: it.unit,
     priceInput: centsToInput(it.unitPrice), vatRate: it.vatRate, taxCategory: it.taxCategory,
   }))
+  optionalItems.value = (q.items || [])
+    .filter((it: any) => it.optional)
+    .map((it: any) => ({ id: it.id, title: it.title, lineGross: it.lineGross }))
 }
 
 onMounted(async () => {
@@ -260,5 +280,29 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <Modal v-if="showInvoiceModal" title="Rechnung erstellen" @close="showInvoiceModal = false">
+      <p class="mb-3 text-sm text-ink-soft">
+        Welche optionalen Positionen hat der Kunde gebucht? Ausgewählte werden als reguläre
+        Rechnungspositionen übernommen.
+      </p>
+      <div class="space-y-2">
+        <label
+          v-for="it in optionalItems"
+          :key="it.id"
+          class="flex items-center justify-between rounded-lg border border-line px-3 py-2 text-sm"
+        >
+          <span class="flex items-center gap-2">
+            <input v-model="selectedOptional[it.id]" type="checkbox" />
+            {{ it.title }}
+          </span>
+          <span class="tabular-nums text-ink-soft">{{ eur(it.lineGross, form.currency) }}</span>
+        </label>
+      </div>
+      <template #actions>
+        <button class="btn-secondary" @click="showInvoiceModal = false">Abbrechen</button>
+        <button class="btn-primary" @click="confirmCreateInvoice">Rechnung erstellen</button>
+      </template>
+    </Modal>
   </AppShell>
 </template>

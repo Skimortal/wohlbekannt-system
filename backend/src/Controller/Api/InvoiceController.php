@@ -84,12 +84,17 @@ class InvoiceController extends ApiController
     }
 
     #[Route('/from-quote/{quoteId}', methods: ['POST'], requirements: ['quoteId' => '\d+'])]
-    public function fromQuote(int $quoteId): JsonResponse
+    public function fromQuote(int $quoteId, Request $request): JsonResponse
     {
         $quote = $this->quotes->find($quoteId);
         if (!$quote instanceof Quote) {
             return $this->json(['error' => 'Angebot nicht gefunden.'], 404);
         }
+
+        // Optional positions the customer accepted (quote item ids) get billed as
+        // regular lines; the rest of the optional positions are left out.
+        $data = $this->body($request);
+        $includeOptional = array_map('intval', $data['includeOptionalItemIds'] ?? []);
 
         $invoice = new Invoice();
         $this->applyDefaults($invoice);
@@ -102,13 +107,13 @@ class InvoiceController extends ApiController
         $invoice->setPricesIncludeVat($quote->isPricesIncludeVat());
         $invoice->setContactPerson($quote->getContactPerson());
 
-        // Copy the firm (non-optional) positions; accepted extras can be added when editing.
         foreach ($quote->getItems() as $src) {
-            if ($src->isOptional()) {
+            if ($src->isOptional() && !in_array($src->getId(), $includeOptional, true)) {
                 continue;
             }
             $item = new InvoiceItem();
             $this->copyLine($src, $item);
+            $item->setOptional(false); // billed now -> regular line
             $invoice->addItem($item);
         }
 
