@@ -1,0 +1,15 @@
+# OS / editor
+.DS_Store
+*.log
+
+# Node (frontend + mcp-server)
+node_modules/
+frontend/dist/
+
+# PHP / Symfony handled by backend/.gitignore as well, but keep these globally:
+backend/var/
+backend/vendor/
+
+# Docker local overrides
+docker-dev/.env
+.env.local

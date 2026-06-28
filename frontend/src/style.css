@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+/*
+ * wohlbekannt brand tokens (from logo SVG):
+ *   sand/champagne #E6C7A9, near-black #0E1214.
+ * Minimal, elegant, lots of whitespace.
+ */
+@theme {
+  --color-ink: #0e1214;
+  --color-ink-soft: #3a3f42;
+  --color-sand: #e6c7a9;
+  --color-sand-50: #faf3ea;
+  --color-sand-100: #f3e6d6;
+  --color-sand-200: #ecd8c1;
+  --color-paper: #ffffff;
+  --color-line: #e8e2da;
+
+  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  min-height: 100svh;
+}
