@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>wohlbekannt-system — Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* surfaces */
+    --paper:#FFFFFF; --canvas:#FBFAF8; --sunken:#F6F4F1; --hover:#F4F1EC;
+    /* ink */
+    --ink:#0E1214; --ink-soft:#3A3F42; --ink-muted:#6B7176; --ink-faint:#9AA0A4; --ink-invert:#FFFFFF;
+    /* sand */
+    --sand:#E6C7A9; --sand-50:#FAF3EA; --sand-100:#F3E6D6; --sand-200:#ECD8C1; --sand-300:#DDB892; --sand-700:#8A5A2E;
+    /* lines */
+    --line:#E8E2DA; --line-strong:#D9D2C8;
+    /* semantic */
+    --success:#1F7A4D; --success-bg:#EAF4EE; --success-border:#C9E3D4;
+    --warning:#8A5A00; --warning-bg:#FBF1DD; --warning-border:#EFD9A8;
+    --danger:#B23129;  --danger-bg:#FBEBEA;  --danger-border:#F0CFCC;
+    --info:#2C5A82;    --info-bg:#EAF1F7;    --info-border:#CBDDEC;
+    --neutral:#4B5156; --neutral-bg:#F2F1EE; --neutral-border:#E0DCD4;
+    /* radius / shadow */
+    --r-sm:4px; --r-md:8px; --r-lg:12px;
+    --sh-sm:0 1px 2px rgba(14,18,20,.05);
+    --sh-md:0 8px 24px -8px rgba(14,18,20,.12);
+    --sh-lg:0 24px 48px -16px rgba(14,18,20,.18);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Inter',system-ui,'Segoe UI',Roboto,sans-serif;
+    font-size:14px; line-height:22px;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+  .num{font-variant-numeric:tabular-nums}
+  .right{text-align:right}
+  a{color:inherit}
+
+  /* ---------- shell ---------- */
+  .shell{display:flex; min-height:100vh}
+  .sidebar{width:240px; flex:none; background:var(--canvas); border-right:1px solid var(--line);
+    padding:18px 14px; position:sticky; top:0; height:100vh}
+  .brand{display:flex; align-items:baseline; gap:.18em; padding:6px 8px 18px; user-select:none}
+  .brand .wohl{font-weight:700; letter-spacing:.18em; font-size:15px; color:var(--sand-700)}
+  .brand .bk{font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px; color:var(--ink); margin-left:.1em}
+  .navgroup{margin-top:14px}
+  .navlabel{font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-faint); padding:0 8px 6px}
+  .navitem{display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:var(--r-sm);
+    color:var(--ink-muted); font-size:14px; cursor:pointer; border-left:2px solid transparent}
+  .navitem:hover{background:var(--hover); color:var(--ink)}
+  .navitem.active{background:var(--sand-50); color:var(--ink); border-left-color:var(--sand); font-weight:500}
+  .navitem .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55}
+
+  .main{flex:1; min-width:0}
+  .topbar{height:56px; background:var(--paper); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 32px; position:sticky; top:0; z-index:5}
+  .crumb{font-size:13px; color:var(--ink-muted)}
+  .crumb b{color:var(--ink); font-weight:600}
+  .search{height:34px; width:260px; border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); padding:0 12px; font:inherit; font-size:13px; color:var(--ink)}
+  .search::placeholder{color:var(--ink-faint)}
+  .ava{width:30px;height:30px;border-radius:50%;background:var(--sand-100);border:1px solid var(--sand-200);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--sand-700)}
+
+  .content{padding:28px 32px 64px; max-width:1100px}
+  .pagehead{margin-bottom:22px}
+  h1{font-size:22px; line-height:30px; font-weight:600; letter-spacing:-.01em; margin:0}
+  .sub{color:var(--ink-muted); font-size:14px; margin-top:4px}
+
+  section.block{background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:24px; margin-bottom:24px}
+  .block > h2{font-size:18px; line-height:26px; font-weight:600; letter-spacing:-.01em; margin:0 0 2px}
+  .block > .hint{color:var(--ink-muted); font-size:13px; margin:0 0 18px}
+
+  /* ---------- swatches ---------- */
+  .swgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+  .sw{border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; background:var(--paper)}
+  .sw .chip{height:54px}
+  .sw .meta{padding:8px 10px}
+  .sw .nm{font-size:12px; font-weight:600; color:var(--ink)}
+  .sw .hex{font-size:11px; color:var(--ink-muted); font-variant-numeric:tabular-nums; text-transform:uppercase}
+
+  /* ---------- type scale ---------- */
+  .typerow{display:grid; grid-template-columns:120px 1fr; gap:18px; align-items:baseline;
+    padding:12px 0; border-bottom:1px solid var(--line)}
+  .typerow:last-child{border-bottom:0}
+  .typerow .lab{font-size:12px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em}
+  .t-display{font-size:28px;line-height:36px;font-weight:600;letter-spacing:-.01em}
+  .t-h1{font-size:22px;line-height:30px;font-weight:600;letter-spacing:-.01em}
+  .t-h2{font-size:18px;line-height:26px;font-weight:600}
+  .t-h3{font-size:15px;line-height:22px;font-weight:600}
+  .t-body{font-size:14px;line-height:22px}
+  .t-small{font-size:13px;line-height:18px;color:var(--ink-soft)}
+  .t-cap{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted)}
+
+  /* ---------- buttons ---------- */
+  .btnrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .btn{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:var(--r-md);
+    font:inherit;font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .12s cubic-bezier(.2,0,.2,1)}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--sand)}
+  .btn-primary{background:var(--ink);color:var(--ink-invert)}
+  .btn-primary:hover{background:var(--ink-soft)}
+  .btn-secondary{background:var(--paper);color:var(--ink);border-color:var(--line-strong)}
+  .btn-secondary:hover{background:var(--hover)}
+  .btn-ghost{background:transparent;color:var(--ink-soft)}
+  .btn-ghost:hover{background:var(--hover)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-danger:hover{filter:brightness(.95)}
+  .btn-accent{background:var(--sand-300);color:var(--ink)}
+  .btn-accent:hover{background:var(--sand)}
+
+  /* ---------- inputs ---------- */
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted)}
+  .input{height:36px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--paper);
+    padding:0 12px;font:inherit;font-size:14px;color:var(--ink)}
+  .input::placeholder{color:var(--ink-faint)}
+  .input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 2px var(--sand)}
+  .input.err{border-color:var(--danger)}
+  .errmsg{font-size:12px;color:var(--danger)}
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .moneyin{position:relative}
+  .moneyin .input{text-align:right;padding-right:46px;font-variant-numeric:tabular-nums}
+  .moneyin .suf{position:absolute;right:12px;top:0;height:36px;display:flex;align-items:center;color:var(--ink-muted);font-size:13px}
+
+  /* ---------- badges ---------- */
+  .badges{display:flex;flex-wrap:wrap;gap:10px}
+  .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:var(--r-sm);
+    padding:2px 9px;font-size:12px;font-weight:500;line-height:18px}
+  .badge .bd{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .b-neutral{color:var(--neutral);background:var(--neutral-bg);border-color:var(--neutral-border)}
+  .b-info{color:var(--info);background:var(--info-bg);border-color:var(--info-border)}
+  .b-success{color:var(--success);background:var(--success-bg);border-color:var(--success-border)}
+  .b-danger{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+  .b-warning{color:var(--warning);background:var(--warning-bg);border-color:var(--warning-border)}
+  .b-cancelled{color:var(--ink-faint);background:var(--sunken);border-color:var(--line)}
+  .statuscol{display:flex;flex-direction:column;gap:10px}
+  .statuscol .cap{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:2px}
+
+  /* ---------- table ---------- */
+  .tbl{width:100%;border-collapse:collapse;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+  .tbl thead th{background:var(--sunken);color:var(--ink-muted);font-size:11px;font-weight:500;
+    text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px 16px;border-bottom:1px solid var(--line)}
+  .tbl tbody td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tbody tr:hover{background:var(--hover)}
+  .tbl tbody tr.sel{background:var(--sand-50);box-shadow:inset 2px 0 0 var(--sand)}
+  .tbl .docno{font-weight:600;color:var(--ink)}
+  .tbl .muted{color:var(--ink-muted)}
+  .tbl .cancel .docno{text-decoration:line-through;color:var(--ink-faint)}
+
+  /* ---------- line item editor ---------- */
+  .doc{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--paper)}
+  .li-head,.li-row{display:grid;grid-template-columns:54px 1fr 92px 110px 132px;gap:14px}
+  .li-head{background:var(--sunken);border-bottom:1px solid var(--line);padding:10px 16px;
+    font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted)}
+  .li-row{padding:14px 16px;border-bottom:1px solid var(--line);align-items:start}
+  .li-row .pos{font-size:14px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+  .li-name{font-size:14px;font-weight:600;color:var(--ink)}
+  .li-desc{font-size:13px;line-height:19px;color:var(--ink-soft);margin-top:3px;white-space:pre-line}
+  .li-row .qty,.li-row .unit,.li-row .sum{text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
+  .li-row .qtyunit{color:var(--ink-muted);font-size:12px}
+  .li-row .sum{font-weight:600;color:var(--ink)}
+  .tax{display:block;font-size:11px;color:var(--ink-faint);margin-top:2px}
+
+  /* optional row treatment */
+  .li-row.opt{background:var(--sunken);border-left:2px solid var(--sand-200)}
+  .opt-chip{display:inline-flex;align-items:center;font-size:11px;font-weight:500;text-transform:uppercase;
+    letter-spacing:.04em;color:var(--sand-700);background:var(--sand-50);border:1px solid var(--sand-200);
+    border-radius:var(--r-sm);padding:1px 7px}
+  .li-row.opt .li-name{color:var(--ink-soft)}
+  .li-row.opt .li-desc{color:var(--ink-muted)}
+  .li-row.opt .unit,.li-row.opt .sum{color:var(--ink-muted);font-weight:400}
+
+  /* totals */
+  .totals{padding:16px 16px 18px;background:var(--paper)}
+  .totrow{display:grid;grid-template-columns:1fr 160px;gap:14px;padding:5px 0;font-size:14px}
+  .totrow .lab{text-align:right;color:var(--ink-soft)}
+  .totrow .val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .totrow.brutto{border-top:1px solid var(--line-strong);margin-top:6px;padding-top:12px;font-weight:600}
+  .totrow.brutto .lab,.totrow.brutto .val{color:var(--ink)}
+  .totrow.optsum .lab,.totrow.optsum .val{color:var(--ink-muted);font-size:13px}
+  .optdivider{border:0;border-top:1px dashed var(--line);margin:14px 0 6px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .note{font-size:13px;color:var(--ink-muted);background:var(--sand-50);border:1px solid var(--sand-200);
+    border-radius:var(--r-sm);padding:12px 14px;margin-top:16px}
+  @media(max-width:760px){.formgrid,.grid2{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div class="brand"><span class="wohl">WOHL</span><span class="bk">bekannt</span></div>
+    <div class="navgroup">
+      <div class="navitem"><span class="dot"></span>Dashboard</div>
+      <div class="navitem"><span class="dot"></span>Kunden</div>
+      <div class="navitem active"><span class="dot"></span>Angebote</div>
+      <div class="navitem"><span class="dot"></span>Rechnungen</div>
+    </div>
+    <div class="navgroup">
+      <div class="navlabel">Verwaltung</div>
+      <div class="navitem"><span class="dot"></span>Artikel &amp; Pakete</div>
+      <div class="navitem"><span class="dot"></span>Einstellungen</div>
+    </div>
+  </aside>
+
+  <!-- main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb">Angebote / <b>AN-1032</b></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <input class="search" placeholder="Suchen … (Kunde, Angebot, Rechnung)" />
+        <div class="ava">JR</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="pagehead">
+        <h1>Design-System — Vorschau</h1>
+        <p class="sub">wohlbekannt-system · ruhig, papierhaft, hochwertig. Sand für Akzente, Tinte für Aktionen.</p>
+      </div>
+
+      <!-- colors -->
+      <section class="block">
+        <h2>Farben</h2>
+        <p class="hint">Oberflächen, Tinte, Sand-Akzent, Linien und semantische Rollen.</p>
+        <div class="swgrid">
+          <div class="sw"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="nm">paper</div><div class="hex">#FFFFFF</div></div></div>
+          <div class="sw"><div class="chip" style="background:#FBFAF8"></div><div class="meta"><div class="nm">canvas</div><div class="hex">#FBFAF8</div></div></div>
+          <div class="sw"><div class="chip" style="background:#F6F4F1"></div><div class="meta"><div class="nm">sunken</div><div class="hex">#F6F4F1</div></div></div>
+          <div class="sw"><div class="chip" style="background:#0E1214"></div><div class="meta"><div class="nm">ink</div><div class="hex">#0E1214</div></div></div>
+          <div class="sw"><div class="chip" style="background:#3A3F42"></div><div class="meta"><div class="nm">ink-soft</div><div class="hex">#3A3F42</div></div></div>
+          <div class="sw"><div class="chip" style="background:#6B7176"></div><div class="meta"><div class="nm">ink-muted</div><div class="hex">#6B7176</div></div></div>
+          <div class="sw"><div class="chip" style="background:#E6C7A9"></div><div class="meta"><div class="nm">sand</div><div class="hex">#E6C7A9</div></div></div>
+          <div class="sw"><div class="chip" style="background:#FAF3EA"></div><div class="meta"><div class="nm">sand-50</div><div class="hex">#FAF3EA</div></div></div>
+          <div class="sw"><div class="chip" style="background:#DDB892"></div><div class="meta"><div class="nm">sand-300</div><div class="hex">#DDB892</div></div></div>
+          <div class="sw"><div class="chip" style="background:#8A5A2E"></div><div class="meta"><div class="nm">sand-700 (text)</div><div class="hex">#8A5A2E</div></div></div>
+          <div class="sw"><div class="chip" style="background:#E8E2DA"></div><div class="meta"><div class="nm">line</div><div class="hex">#E8E2DA</div></div></div>
+          <div class="sw"><div class="chip" style="background:#1F7A4D"></div><div class="meta"><div class="nm">success</div><div class="hex">#1F7A4D</div></div></div>
+          <div class="sw"><div class="chip" style="background:#8A5A00"></div><div class="meta"><div class="nm">warning</div><div class="hex">#8A5A00</div></div></div>
+          <div class="sw"><div class="chip" style="background:#B23129"></div><div class="meta"><div class="nm">danger</div><div class="hex">#B23129</div></div></div>
+          <div class="sw"><div class="chip" style="background:#2C5A82"></div><div class="meta"><div class="nm">info</div><div class="hex">#2C5A82</div></div></div>
+        </div>
+      </section>
+
+      <!-- status -->
+      <section class="block">
+        <h2>Status-Badges</h2>
+        <p class="hint">Angebot &amp; Rechnung. Kleine, ruhige Badges mit getöntem Hintergrund und Hairline.</p>
+        <div class="grid2">
+          <div class="statuscol">
+            <span class="cap">Angebot</span>
+            <div class="badges">
+              <span class="badge b-neutral"><span class="bd"></span>Entwurf</span>
+              <span class="badge b-info"><span class="bd"></span>Versendet</span>
+              <span class="badge b-success"><span class="bd"></span>Angenommen</span>
+              <span class="badge b-danger"><span class="bd"></span>Abgelehnt</span>
+              <span class="badge b-warning"><span class="bd"></span>Abgelaufen</span>
+            </div>
+          </div>
+          <div class="statuscol">
+            <span class="cap">Rechnung</span>
+            <div class="badges">
+              <span class="badge b-neutral"><span class="bd"></span>Entwurf</span>
+              <span class="badge b-info"><span class="bd"></span>Versendet</span>
+              <span class="badge b-success"><span class="bd"></span>Bezahlt</span>
+              <span class="badge b-danger"><span class="bd"></span>Überfällig</span>
+              <span class="badge b-cancelled"><span class="bd"></span>Storniert</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- typography -->
+      <section class="block">
+        <h2>Typografie — Inter</h2>
+        <p class="hint">Bildschirm-optimiert, echte Tabellenziffern für Geldspalten.</p>
+        <div class="typerow"><span class="lab">Display 28/600</span><span class="t-display">Wohlbekannt Eventkatering</span></div>
+        <div class="typerow"><span class="lab">H1 22/600</span><span class="t-h1">Angebote</span></div>
+        <div class="typerow"><span class="lab">H2 18/600</span><span class="t-h2">Positionen</span></div>
+        <div class="typerow"><span class="lab">H3 15/600</span><span class="t-h3">Sektempfang 2h</span></div>
+        <div class="typerow"><span class="lab">Body 14/400</span><span class="t-body">Gerne unterbreiten wir Ihnen das gewünschte freibleibende Angebot für Ihre Veranstaltung.</span></div>
+        <div class="typerow"><span class="lab">Small 13/400</span><span class="t-small">An- und Abfahrt, Gläser, Bereitstellung mobile Bar.</span></div>
+        <div class="typerow"><span class="lab">Caption 12/500</span><span class="t-cap">Einzelpreis</span></div>
+        <div class="typerow"><span class="lab">Tabular-nums</span><span class="t-body num">1.008,00&nbsp;·&nbsp;168,00&nbsp;·&nbsp;1.176,00&nbsp;EUR</span></div>
+      </section>
+
+      <!-- buttons + inputs -->
+      <section class="block">
+        <h2>Buttons &amp; Formularfelder</h2>
+        <p class="hint">Tinte = primäre Aktion. Sand = seltener Akzent/CTA.</p>
+        <div class="btnrow" style="margin-bottom:22px">
+          <button class="btn btn-primary">Angebot speichern</button>
+          <button class="btn btn-secondary">Vorschau</button>
+          <button class="btn btn-ghost">Abbrechen</button>
+          <button class="btn btn-accent">Angebot annehmen</button>
+          <button class="btn btn-danger">Löschen</button>
+        </div>
+        <div class="formgrid">
+          <div class="field">
+            <label>Firma</label>
+            <input class="input" value="RS Wohlbekannt OG" />
+          </div>
+          <div class="field">
+            <label>Ansprechpartner</label>
+            <input class="input" placeholder="Name eingeben …" />
+          </div>
+          <div class="field">
+            <label>E-Mail</label>
+            <input class="input err" value="bar@wohlbekannt" />
+            <span class="errmsg">Bitte eine gültige E-Mail-Adresse eingeben.</span>
+          </div>
+          <div class="field">
+            <label>Einzelpreis</label>
+            <div class="moneyin"><input class="input num" value="24,00" /><span class="suf">EUR</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- table -->
+      <section class="block">
+        <h2>Datentabelle</h2>
+        <p class="hint">Hairlines statt Schatten, rechtsbündige Geldspalten, dezente Auswahl in Sand.</p>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:120px">Nr.</th>
+              <th>Kunde</th>
+              <th style="width:120px">Datum</th>
+              <th style="width:150px">Status</th>
+              <th class="right" style="width:150px">Betrag brutto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sel">
+              <td class="docno">AN-1032</td>
+              <td>Alma Sonvilla</td>
+              <td class="muted num">14.05.2026</td>
+              <td><span class="badge b-info"><span class="bd"></span>Versendet</span></td>
+              <td class="right num">1.176,00 EUR</td>
+            </tr>
+            <tr>
+              <td class="docno">AN-1031</td>
+              <td>Gemeinde Kematen</td>
+              <td class="muted num">09.05.2026</td>
+              <td><span class="badge b-success"><span class="bd"></span>Angenommen</span></td>
+              <td class="right num">3.480,00 EUR</td>
+            </tr>
+            <tr>
+              <td class="docno">AN-1029</td>
+              <td>Tiroler Sparkasse</td>
+              <td class="muted num">28.04.2026</td>
+              <td><span class="badge b-warning"><span class="bd"></span>Abgelaufen</span></td>
+              <td class="right num">912,00 EUR</td>
+            </tr>
+            <tr class="cancel">
+              <td class="docno">RE-2044</td>
+              <td>Bouvet Events</td>
+              <td class="muted num">21.04.2026</td>
+              <td><span class="badge b-cancelled"><span class="bd"></span>Storniert</span></td>
+              <td class="right num muted">540,00 EUR</td>
+            </tr>
+            <tr>
+              <td class="docno">RE-2041</td>
+              <td>Innsbruck Marketing</td>
+              <td class="muted num">12.04.2026</td>
+              <td><span class="badge b-danger"><span class="bd"></span>Überfällig</span></td>
+              <td class="right num">2.190,00 EUR</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- line item editor -->
+      <section class="block">
+        <h2>Positionen — Angebot AN-1032</h2>
+        <p class="hint">Optionale Positionen lesen sich klar sekundär: Sand-Chip „Opt.“, hellere Tinte und Preise in Klammern — wie im gedruckten Angebot.</p>
+        <div class="doc">
+          <div class="li-head">
+            <span>Pos.</span><span>Beschreibung</span>
+            <span class="right">Menge</span><span class="right">Einzelpreis</span><span class="right">Gesamtpreis</span>
+          </div>
+
+          <div class="li-row">
+            <span class="pos">1.</span>
+            <div>
+              <div class="li-name">Sektempfang 2h</div>
+              <div class="li-desc">Wir bereiten euch den Sektempfang für eure Gäste. Elegant und klassisch. Serviert mit hochwertigen Sektgläsern.</div>
+            </div>
+            <span class="qty">42,00<span class="qtyunit" style="display:block">Personen</span></span>
+            <span class="unit">24,00 EUR</span>
+            <span class="sum">1.008,00 EUR<span class="tax">(Steuer 20%)</span></span>
+          </div>
+
+          <div class="li-row">
+            <span class="pos">2.</span>
+            <div>
+              <div class="li-name">Fahrtkostenpauschale Innsbruck/Innsbruck-Land</div>
+              <div class="li-desc">An- und Abfahrt, Gläser, Bereitstellung mobile Bar.</div>
+            </div>
+            <span class="qty">pauschal</span>
+            <span class="unit">168,00 EUR</span>
+            <span class="sum">168,00 EUR<span class="tax">(Steuer 20%)</span></span>
+          </div>
+
+          <hr class="optdivider" />
+
+          <div class="li-row opt">
+            <span class="pos"><span class="opt-chip">Opt.</span></span>
+            <div>
+              <div class="li-name">Bierpaket 20L (vom Fass)</div>
+              <div class="li-desc">Das Bierpaket wird nach Verbrauch verrechnet. Zusätzlich kommen wir mit den passenden Bierkrügln. Innsbrucker Lager der Bierfabrik.</div>
+            </div>
+            <span class="qty">pauschal</span>
+            <span class="unit">(95,00 EUR)</span>
+            <span class="sum">(95,00 EUR)<span class="tax">(Steuer 20%)</span></span>
+          </div>
+
+          <div class="li-row opt">
+            <span class="pos"><span class="opt-chip">Opt.</span></span>
+            <div>
+              <div class="li-name">Apertivempfang 2h</div>
+              <div class="li-desc">Das Besondere für eure Gäste. Bis zu drei Aperitiv-Varianten zur Auswahl, serviert im ikonischen wohlbekannt Edelstahlbecher.</div>
+            </div>
+            <span class="qty">42,00<span class="qtyunit" style="display:block">Personen</span></span>
+            <span class="unit">(29,90 EUR)</span>
+            <span class="sum">(1.255,80 EUR)<span class="tax">(Steuer 20%)</span></span>
+          </div>
+
+          <div class="totals">
+            <div class="totrow"><span class="lab">Gesamtbetrag netto</span><span class="val num">980,00 EUR</span></div>
+            <div class="totrow"><span class="lab">zzgl. Umsatzsteuer 20%</span><span class="val num">196,00 EUR</span></div>
+            <div class="totrow brutto"><span class="lab">Gesamtbetrag brutto</span><span class="val num">1.176,00 EUR</span></div>
+            <div class="totrow optsum"><span class="lab">Summe optionaler Positionen brutto</span><span class="val num">1.445,80 EUR</span></div>
+          </div>
+        </div>
+        <div class="note">Optionale Positionen fließen <b>nicht</b> in den Gesamtbetrag brutto ein — sie werden separat als „Summe optionaler Positionen“ ausgewiesen, exakt wie im gedruckten Angebot.</div>
+      </section>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
