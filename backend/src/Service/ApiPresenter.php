@@ -10,6 +10,7 @@ use App\Entity\Embeddable\Address;
 use App\Entity\Invoice;
 use App\Entity\Payment;
 use App\Entity\Quote;
+use App\Entity\User;
 
 /**
  * Converts entities to plain arrays for the JSON API. Monetary values are
@@ -157,6 +158,20 @@ class ApiPresenter
             'amount' => $p->getAmount(),
             'method' => $p->getMethod(),
             'reference' => $p->getReference(),
+        ];
+    }
+
+    public function user(User $u): array
+    {
+        $roles = $u->getRoles();
+
+        return [
+            'id' => $u->getId(),
+            'email' => $u->getEmail(),
+            'name' => $u->getName(),
+            'roles' => $roles,
+            'role' => in_array('ROLE_ADMIN', $roles, true) ? 'admin' : 'user',
+            'active' => $u->isActive(),
         ];
     }
 

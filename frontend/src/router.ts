@@ -14,6 +14,7 @@ const router = createRouter({
     { path: '/rechnungen', name: 'invoices', component: () => import('./views/InvoicesView.vue') },
     { path: '/rechnungen/neu', name: 'invoice-new', component: () => import('./views/InvoiceEditorView.vue') },
     { path: '/rechnungen/:id', name: 'invoice-edit', component: () => import('./views/InvoiceEditorView.vue') },
+    { path: '/benutzer', name: 'users', component: () => import('./views/UsersView.vue') },
     { path: '/einstellungen', name: 'settings', component: () => import('./views/SettingsView.vue') },
   ],
 })

@@ -1,9 +1,21 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '../api'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
+const isAdmin = ref(false)
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/api/me')
+    isAdmin.value = (data.roles || []).includes('ROLE_ADMIN')
+  } catch {
+    /* ignore */
+  }
+})
 
 const nav = [
   { to: '/', label: 'Dashboard', exact: true },
@@ -49,6 +61,14 @@ function logout() {
           active-class="bg-sand-100 !text-ink font-medium"
         >
           {{ item.label }}
+        </RouterLink>
+        <RouterLink
+          v-if="isAdmin"
+          to="/benutzer"
+          class="block rounded-lg px-3 py-2 text-sm text-ink-soft hover:bg-sand-50"
+          active-class="bg-sand-100 !text-ink font-medium"
+        >
+          Benutzer
         </RouterLink>
       </nav>
     </aside>

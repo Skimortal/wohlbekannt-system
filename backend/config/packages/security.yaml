@@ -16,6 +16,7 @@ security:
         login:
             pattern: ^/api/login$
             stateless: true
+            user_checker: App\Security\UserChecker
             json_login:
                 check_path: /api/login
                 username_path: email
@@ -27,11 +28,13 @@ security:
             pattern: ^/api
             stateless: true
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
             jwt: ~
 
     access_control:
         - { path: ^/api/login,  roles: PUBLIC_ACCESS }
         - { path: ^/api/health, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users,  roles: ROLE_ADMIN }
         - { path: ^/api,        roles: ROLE_USER }
 
 when@test:
