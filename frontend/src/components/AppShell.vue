@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/auth'
 const auth = useAuthStore()
 const router = useRouter()
 const isAdmin = ref(false)
+const drawerOpen = ref(false)
 
 onMounted(async () => {
   try {
@@ -35,13 +36,19 @@ function logout() {
 </script>
 
 <template>
-  <div class="flex min-h-svh bg-sand-50">
-    <!-- sidebar -->
-    <aside class="fixed inset-y-0 left-0 w-60 border-r border-line bg-paper px-4 py-5">
+  <div class="min-h-svh bg-sand-50">
+    <!-- backdrop (mobile) -->
+    <div v-if="drawerOpen" class="fixed inset-0 z-30 bg-ink/30 lg:hidden" @click="drawerOpen = false"></div>
+
+    <!-- sidebar / drawer -->
+    <aside
+      class="fixed inset-y-0 left-0 z-40 w-60 border-r border-line bg-paper px-4 py-5 transition-transform duration-200 lg:translate-x-0"
+      :class="drawerOpen ? 'translate-x-0' : '-translate-x-full'"
+    >
       <div class="mb-8 px-2">
         <img src="/logo.svg" alt="wohlbekannt" class="h-9 w-auto" />
       </div>
-      <nav class="space-y-0.5">
+      <nav class="space-y-0.5" @click="drawerOpen = false">
         <RouterLink
           v-for="item in nav"
           :key="item.to"
@@ -74,12 +81,25 @@ function logout() {
     </aside>
 
     <!-- main -->
-    <div class="ml-60 flex min-h-svh flex-1 flex-col">
-      <header class="flex h-14 items-center justify-between border-b border-line bg-paper px-6">
-        <div class="text-sm text-ink-soft"><slot name="breadcrumb" /></div>
+    <div class="flex min-h-svh flex-col lg:ml-60">
+      <header class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-paper px-4 lg:px-6">
+        <div class="flex items-center gap-3">
+          <button
+            class="-ml-1 rounded-lg p-2 text-ink hover:bg-sand-50 lg:hidden"
+            aria-label="Menü öffnen"
+            @click="drawerOpen = true"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div class="text-sm text-ink-soft"><slot name="breadcrumb" /></div>
+        </div>
         <button class="text-sm text-ink-soft hover:text-ink" @click="logout">Abmelden</button>
       </header>
-      <main class="flex-1 px-6 py-8">
+      <main class="flex-1 px-4 py-6 lg:px-6 lg:py-8">
         <slot />
       </main>
     </div>
