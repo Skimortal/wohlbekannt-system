@@ -121,7 +121,7 @@ class ApiPresenter
             'decidedAt' => $q->getDecidedAt()?->format(\DATE_ATOM),
         ];
         if ($withItems) {
-            $data['items'] = array_map([$this, 'lineItem'], $q->getItems()->toArray());
+            $data['items'] = array_map([$this, 'lineItem'], array_values($q->getItems()->toArray()));
         }
 
         return $data;
@@ -142,8 +142,8 @@ class ApiPresenter
             'sentAt' => $inv->getSentAt()?->format(\DATE_ATOM),
         ];
         if ($withItems) {
-            $data['items'] = array_map([$this, 'lineItem'], $inv->getItems()->toArray());
-            $data['payments'] = array_map([$this, 'payment'], $inv->getPayments()->toArray());
+            $data['items'] = array_map([$this, 'lineItem'], array_values($inv->getItems()->toArray()));
+            $data['payments'] = array_map([$this, 'payment'], array_values($inv->getPayments()->toArray()));
         }
 
         return $data;
