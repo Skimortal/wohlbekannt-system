@@ -63,6 +63,7 @@ onMounted(load)
     <div class="mb-4"><input v-model="search" class="input max-w-xs" placeholder="Suchen …" @input="load" /></div>
 
     <div class="card overflow-hidden">
+      <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Bezeichnung</th><th class="th">Kategorie</th><th class="th">Einheit</th><th class="th text-right">Preis (brutto)</th><th class="th text-right">USt</th><th class="th"></th></tr>
@@ -82,6 +83,7 @@ onMounted(load)
           <tr v-if="!articles.length"><td class="td text-ink-soft" colspan="6">Noch keine Artikel.</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Artikel bearbeiten' : 'Neuer Artikel'" @close="showModal = false">

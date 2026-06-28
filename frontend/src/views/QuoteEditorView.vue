@@ -229,7 +229,7 @@ onMounted(async () => {
         <div class="card p-6">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-base font-semibold text-ink">Positionen</h2>
-            <div v-if="isDraft" class="flex items-center gap-2">
+            <div v-if="isDraft" class="flex flex-wrap items-center gap-2">
               <select class="input !w-auto py-1.5 text-sm" @change="addFromArticle">
                 <option value="">+ aus Katalog …</option>
                 <option v-for="a in articles" :key="a.id" :value="a.id">{{ a.name }}</option>
@@ -251,7 +251,7 @@ onMounted(async () => {
               </template>
             </div>
             <textarea v-model="it.description" rows="2" class="input mb-2 text-sm" placeholder="Beschreibung (optional)" :disabled="!isDraft"></textarea>
-            <div class="grid grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div><label class="label !text-xs">Menge</label><input v-model="it.quantity" class="input text-right tabular-nums" :disabled="!isDraft" /></div>
               <div><label class="label !text-xs">Einheit</label><input v-model="it.unit" class="input" :disabled="!isDraft" /></div>
               <div><label class="label !text-xs">EP ({{ form.pricesIncludeVat ? 'brutto' : 'netto' }})</label><input v-model="it.priceInput" class="input text-right tabular-nums" :disabled="!isDraft" /></div>

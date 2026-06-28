@@ -68,6 +68,7 @@ onMounted(load)
     </div>
 
     <div class="card overflow-hidden">
+      <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Nr.</th><th class="th">Name</th><th class="th">E-Mail</th><th class="th">Ort</th><th class="th">Angelegt</th><th class="th"></th></tr>
@@ -87,6 +88,7 @@ onMounted(load)
           <tr v-if="!customers.length"><td class="td text-ink-soft" colspan="6">Noch keine Kunden.</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Kunde bearbeiten' : 'Neuer Kunde'" @close="showModal = false">

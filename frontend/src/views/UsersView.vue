@@ -87,6 +87,7 @@ onMounted(load)
     </div>
 
     <div class="card overflow-hidden">
+      <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Name</th><th class="th">E-Mail</th><th class="th">Rolle</th><th class="th">Status</th><th class="th"></th></tr>
@@ -107,6 +108,7 @@ onMounted(load)
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Benutzer bearbeiten' : 'Neuer Benutzer'" @close="showModal = false">

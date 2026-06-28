@@ -27,6 +27,7 @@ onMounted(load)
     </div>
 
     <div class="card overflow-hidden">
+      <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Nr.</th><th class="th">Typ</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Brutto</th><th class="th text-right">Offen</th></tr>
@@ -44,6 +45,7 @@ onMounted(load)
           <tr v-if="!invoices.length"><td class="td text-ink-soft" colspan="7">Noch keine Rechnungen.</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
   </AppShell>
 </template>

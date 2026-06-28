@@ -25,6 +25,7 @@ onMounted(load)
     </div>
 
     <div class="card overflow-hidden">
+      <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Nr.</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Betrag brutto</th></tr>
@@ -40,6 +41,7 @@ onMounted(load)
           <tr v-if="!quotes.length"><td class="td text-ink-soft" colspan="5">Noch keine Angebote.</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
   </AppShell>
 </template>
