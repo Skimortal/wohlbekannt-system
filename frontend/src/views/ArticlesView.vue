@@ -62,7 +62,8 @@ onMounted(load)
     </div>
     <div class="mb-4"><input v-model="search" class="input max-w-xs" placeholder="Suchen …" @input="load" /></div>
 
-    <div class="card overflow-hidden">
+    <!-- desktop table -->
+    <div class="hidden card overflow-hidden lg:block">
       <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
@@ -80,10 +81,26 @@ onMounted(load)
               <button class="btn-ghost text-red-600" @click="remove(a)">Löschen</button>
             </td>
           </tr>
-          <tr v-if="!articles.length"><td class="td text-ink-soft" colspan="6">Noch keine Artikel.</td></tr>
+          <tr v-if="!articles.length"><td class="td text-ink-soft" colspan="6">Keine Artikel gefunden.</td></tr>
         </tbody>
       </table>
       </div>
+    </div>
+
+    <!-- mobile cards -->
+    <div class="space-y-3 lg:hidden">
+      <div v-for="a in articles" :key="a.id" class="card p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-medium text-ink">{{ a.name }}</div>
+          <div class="shrink-0 tabular-nums font-medium text-ink">{{ eur(a.unitPrice) }}</div>
+        </div>
+        <div class="mt-0.5 text-xs text-ink-soft">{{ [a.category, a.unit, a.vatRate + '% USt'].filter(Boolean).join(' · ') }}</div>
+        <div class="mt-3 flex gap-2 border-t border-line pt-3">
+          <button class="btn-secondary flex-1" @click="openEdit(a)">Bearbeiten</button>
+          <button class="btn-ghost text-red-600" @click="remove(a)">Löschen</button>
+        </div>
+      </div>
+      <p v-if="!articles.length" class="py-6 text-center text-sm text-ink-soft">Keine Artikel gefunden.</p>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Artikel bearbeiten' : 'Neuer Artikel'" @close="showModal = false">

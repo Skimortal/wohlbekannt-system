@@ -67,7 +67,8 @@ onMounted(load)
       <input v-model="search" class="input max-w-xs" placeholder="Suchen …" @input="load" />
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- desktop table -->
+    <div class="hidden card overflow-hidden lg:block">
       <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
@@ -85,10 +86,28 @@ onMounted(load)
               <button class="btn-ghost text-red-600" @click="remove(c)">Löschen</button>
             </td>
           </tr>
-          <tr v-if="!customers.length"><td class="td text-ink-soft" colspan="6">Noch keine Kunden.</td></tr>
+          <tr v-if="!customers.length"><td class="td text-ink-soft" colspan="6">Keine Kunden gefunden.</td></tr>
         </tbody>
       </table>
       </div>
+    </div>
+
+    <!-- mobile cards -->
+    <div class="space-y-3 lg:hidden">
+      <div v-for="c in customers" :key="c.id" class="card p-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="font-medium text-ink">{{ c.displayName }}</div>
+            <div class="text-xs text-ink-soft">Nr. {{ c.customerNumber }}<span v-if="c.address.city"> · {{ c.address.city }}</span></div>
+          </div>
+        </div>
+        <div v-if="c.email" class="mt-1 text-sm text-ink-soft">{{ c.email }}</div>
+        <div class="mt-3 flex gap-2 border-t border-line pt-3">
+          <button class="btn-secondary flex-1" @click="openEdit(c)">Bearbeiten</button>
+          <button class="btn-ghost text-red-600" @click="remove(c)">Löschen</button>
+        </div>
+      </div>
+      <p v-if="!customers.length" class="py-6 text-center text-sm text-ink-soft">Keine Kunden gefunden.</p>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Kunde bearbeiten' : 'Neuer Kunde'" @close="showModal = false">

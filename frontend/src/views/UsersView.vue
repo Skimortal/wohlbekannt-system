@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import AppShell from '../components/AppShell.vue'
 import Modal from '../components/Modal.vue'
 import api from '../api'
 
 const users = ref<any[]>([])
 const meId = ref<number | null>(null)
+const search = ref('')
+const filtered = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return users.value
+  return users.value.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(q))
+})
 const showModal = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -86,14 +92,17 @@ onMounted(load)
       <button class="btn-primary" @click="openNew">+ Neuer Benutzer</button>
     </div>
 
-    <div class="card overflow-hidden">
+    <div class="mb-4"><input v-model="search" class="input max-w-xs" placeholder="Suchen (Name, E-Mail) …" /></div>
+
+    <!-- desktop table -->
+    <div class="hidden card overflow-hidden lg:block">
       <div class="table-wrap">
       <table class="w-full">
         <thead class="border-b border-line bg-sand-50/60">
           <tr><th class="th">Name</th><th class="th">E-Mail</th><th class="th">Rolle</th><th class="th">Status</th><th class="th"></th></tr>
         </thead>
         <tbody>
-          <tr v-for="u in users" :key="u.id" class="border-b border-line last:border-0 hover:bg-sand-50/40">
+          <tr v-for="u in filtered" :key="u.id" class="border-b border-line last:border-0 hover:bg-sand-50/40">
             <td class="td font-medium">{{ u.name }}<span v-if="u.id === meId" class="ml-2 text-xs text-ink-soft">(Sie)</span></td>
             <td class="td text-ink-soft">{{ u.email }}</td>
             <td class="td">{{ ROLE_LABEL[u.role] }}</td>
@@ -106,9 +115,30 @@ onMounted(load)
               <button v-if="u.id !== meId" class="btn-ghost text-red-600" @click="remove(u)">Löschen</button>
             </td>
           </tr>
+          <tr v-if="!filtered.length"><td class="td text-ink-soft" colspan="5">Keine Benutzer gefunden.</td></tr>
         </tbody>
       </table>
       </div>
+    </div>
+
+    <!-- mobile cards -->
+    <div class="space-y-3 lg:hidden">
+      <div v-for="u in filtered" :key="u.id" class="card p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-medium text-ink">{{ u.name }}<span v-if="u.id === meId" class="ml-2 text-xs text-ink-soft">(Sie)</span></div>
+            <div class="text-sm text-ink-soft">{{ u.email }}</div>
+            <div class="mt-0.5 text-xs text-ink-soft">{{ ROLE_LABEL[u.role] }}</div>
+          </div>
+          <span v-if="u.active" class="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-200">Aktiv</span>
+          <span v-else class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 ring-1 ring-inset ring-gray-200">Inaktiv</span>
+        </div>
+        <div class="mt-3 flex gap-2 border-t border-line pt-3">
+          <button class="btn-secondary flex-1" @click="openEdit(u)">Bearbeiten</button>
+          <button v-if="u.id !== meId" class="btn-ghost text-red-600" @click="remove(u)">Löschen</button>
+        </div>
+      </div>
+      <p v-if="!filtered.length" class="py-6 text-center text-sm text-ink-soft">Keine Benutzer gefunden.</p>
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Benutzer bearbeiten' : 'Neuer Benutzer'" @close="showModal = false">
