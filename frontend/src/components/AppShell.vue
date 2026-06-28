@@ -26,7 +26,9 @@ function logout() {
   <div class="flex min-h-svh bg-sand-50">
     <!-- sidebar -->
     <aside class="fixed inset-y-0 left-0 w-60 border-r border-line bg-paper px-4 py-5">
-      <div class="mb-8 px-2 text-lg font-semibold tracking-tight text-ink">wohlbekannt</div>
+      <div class="mb-8 px-2">
+        <img src="/logo.svg" alt="wohlbekannt" class="h-9 w-auto" />
+      </div>
       <nav class="space-y-0.5">
         <RouterLink
           v-for="item in nav"

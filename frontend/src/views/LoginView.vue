@@ -31,7 +31,7 @@ async function submit() {
       class="w-full max-w-sm rounded-2xl border border-line bg-paper p-8 shadow-sm"
       @submit.prevent="submit"
     >
-      <h1 class="mb-1 text-2xl font-semibold tracking-tight text-ink">wohlbekannt</h1>
+      <img src="/logo.svg" alt="wohlbekannt" class="mb-2 h-12 w-auto" />
       <p class="mb-6 text-sm text-ink-soft">Angebote &amp; Rechnungen</p>
 
       <label class="mb-1 block text-sm font-medium text-ink">E-Mail</label>
