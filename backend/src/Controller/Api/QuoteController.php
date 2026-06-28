@@ -14,10 +14,12 @@ use App\Repository\CustomerRepository;
 use App\Repository\QuoteRepository;
 use App\Service\ApiPresenter;
 use App\Service\NumberRangeService;
+use App\Service\PdfService;
 use App\Service\TotalsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/quotes')]
@@ -31,6 +33,7 @@ class QuoteController extends ApiController
         private readonly ApiPresenter $presenter,
         private readonly TotalsService $totals,
         private readonly NumberRangeService $numbers,
+        private readonly PdfService $pdf,
     ) {
     }
 
@@ -110,6 +113,18 @@ class QuoteController extends ApiController
         $this->em->flush();
 
         return $this->json($this->presenter->quote($quote));
+    }
+
+    #[Route('/{id}/pdf', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function pdf(Quote $quote): Response
+    {
+        $content = $this->pdf->renderQuote($quote);
+        $filename = ($quote->getNumber() ?? 'Angebot-Entwurf').'.pdf';
+
+        return new Response($content, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('inline; filename="%s"', $filename),
+        ]);
     }
 
     #[Route('/{id}/accept', methods: ['POST'], requirements: ['id' => '\d+'])]
