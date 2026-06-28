@@ -1,39 +1,50 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import AppShell from '../components/AppShell.vue'
 import api from '../api'
-import { useAuthStore } from '../stores/auth'
+import { eur } from '../lib/format'
 
-const auth = useAuthStore()
-const router = useRouter()
-const health = ref<string>('…')
+const stats = ref({ quotes: 0, openInvoices: 0, openAmount: 0, customers: 0 })
 
 onMounted(async () => {
-  try {
-    const { data } = await api.get('/api/health')
-    health.value = data.status
-  } catch {
-    health.value = 'nicht erreichbar'
+  const [quotes, invoices, customers] = await Promise.all([
+    api.get('/api/quotes'),
+    api.get('/api/invoices'),
+    api.get('/api/customers'),
+  ])
+  const open = invoices.data.filter(
+    (i: any) => i.type === 'invoice' && ['sent', 'partially_paid', 'overdue'].includes(i.status),
+  )
+  stats.value = {
+    quotes: quotes.data.length,
+    openInvoices: open.length,
+    openAmount: open.reduce((s: number, i: any) => s + i.openAmount, 0),
+    customers: customers.data.length,
   }
 })
-
-function logout() {
-  auth.logout()
-  router.push({ name: 'login' })
-}
 </script>
 
 <template>
-  <div class="min-h-svh bg-sand-50">
-    <header class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
-      <span class="text-lg font-semibold tracking-tight text-ink">wohlbekannt</span>
-      <button class="text-sm text-ink-soft hover:text-ink" @click="logout">Abmelden</button>
-    </header>
-
-    <main class="mx-auto max-w-5xl px-6 py-10">
-      <h1 class="mb-2 text-2xl font-semibold tracking-tight text-ink">Übersicht</h1>
-      <p class="text-ink-soft">Phase 1: Angebote &amp; Rechnungen — Grundgerüst läuft.</p>
-      <p class="mt-4 text-sm text-ink-soft">Backend-Health: {{ health }}</p>
-    </main>
-  </div>
+  <AppShell>
+    <template #breadcrumb>Dashboard</template>
+    <h1 class="mb-6 text-2xl font-semibold tracking-tight text-ink">Übersicht</h1>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="card p-5">
+        <div class="text-sm text-ink-soft">Angebote</div>
+        <div class="mt-1 text-2xl font-semibold text-ink">{{ stats.quotes }}</div>
+      </div>
+      <div class="card p-5">
+        <div class="text-sm text-ink-soft">Offene Rechnungen</div>
+        <div class="mt-1 text-2xl font-semibold text-ink">{{ stats.openInvoices }}</div>
+      </div>
+      <div class="card p-5">
+        <div class="text-sm text-ink-soft">Offener Betrag</div>
+        <div class="mt-1 text-2xl font-semibold text-ink">{{ eur(stats.openAmount) }}</div>
+      </div>
+      <div class="card p-5">
+        <div class="text-sm text-ink-soft">Kunden</div>
+        <div class="mt-1 text-2xl font-semibold text-ink">{{ stats.customers }}</div>
+      </div>
+    </div>
+  </AppShell>
 </template>

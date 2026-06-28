@@ -4,18 +4,17 @@ import { useAuthStore } from './stores/auth'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('./views/LoginView.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/',
-      name: 'dashboard',
-      component: () => import('./views/DashboardView.vue'),
-    },
-    // Phase-1 screens (customers, catalog, quotes, invoices) get added here.
+    { path: '/login', name: 'login', component: () => import('./views/LoginView.vue'), meta: { public: true } },
+    { path: '/', name: 'dashboard', component: () => import('./views/DashboardView.vue') },
+    { path: '/kunden', name: 'customers', component: () => import('./views/CustomersView.vue') },
+    { path: '/artikel', name: 'articles', component: () => import('./views/ArticlesView.vue') },
+    { path: '/angebote', name: 'quotes', component: () => import('./views/QuotesView.vue') },
+    { path: '/angebote/neu', name: 'quote-new', component: () => import('./views/QuoteEditorView.vue') },
+    { path: '/angebote/:id', name: 'quote-edit', component: () => import('./views/QuoteEditorView.vue') },
+    { path: '/rechnungen', name: 'invoices', component: () => import('./views/InvoicesView.vue') },
+    { path: '/rechnungen/neu', name: 'invoice-new', component: () => import('./views/InvoiceEditorView.vue') },
+    { path: '/rechnungen/:id', name: 'invoice-edit', component: () => import('./views/InvoiceEditorView.vue') },
+    { path: '/einstellungen', name: 'settings', component: () => import('./views/SettingsView.vue') },
   ],
 })
 
