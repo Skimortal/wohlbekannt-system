@@ -59,10 +59,7 @@ class InvoiceController extends ApiController
             $qb->andWhere('i.number LIKE :q OR i.recipientName LIKE :q')->setParameter('q', '%'.$search.'%');
         }
 
-        return $this->json(array_map(
-            fn (Invoice $i) => $this->presenter->invoice($i, false),
-            $qb->setMaxResults(200)->getQuery()->getResult()
-        ));
+        return $this->listResponse($qb, $request, fn (Invoice $i) => $this->presenter->invoice($i, false));
     }
 
     #[Route('/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]

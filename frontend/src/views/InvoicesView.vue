@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
+import Pagination from '../components/Pagination.vue'
 import api from '../api'
 import { eur, formatDate } from '../lib/format'
 
@@ -11,6 +12,9 @@ const invoices = ref<any[]>([])
 const search = ref('')
 const status = ref('')
 const type = ref('')
+const page = ref(1)
+const limit = 25
+const total = ref(0)
 
 const TYPE_LABEL: Record<string, string> = { invoice: 'Rechnung', credit_note: 'Gutschrift', cancellation: 'Storno' }
 const STATUS = [
@@ -30,8 +34,17 @@ const TYPES = [
 ]
 
 async function load() {
-  const { data } = await api.get('/api/invoices', { params: { q: search.value, status: status.value, type: type.value } })
-  invoices.value = data
+  const { data } = await api.get('/api/invoices', { params: { q: search.value, status: status.value, type: type.value, page: page.value, limit } })
+  invoices.value = data.items
+  total.value = data.total
+}
+function resetAndLoad() {
+  page.value = 1
+  load()
+}
+function goPage(p: number) {
+  page.value = p
+  load()
 }
 onMounted(load)
 </script>
@@ -45,11 +58,11 @@ onMounted(load)
     </div>
 
     <div class="mb-4 flex flex-col gap-2 sm:flex-row">
-      <input v-model="search" class="input sm:max-w-xs" placeholder="Suchen (Nr., Kunde) …" @input="load" />
-      <select v-model="status" class="input sm:max-w-[180px]" @change="load">
+      <input v-model="search" class="input sm:max-w-xs" placeholder="Suchen (Nr., Kunde) …" @input="resetAndLoad" />
+      <select v-model="status" class="input sm:max-w-[180px]" @change="resetAndLoad">
         <option v-for="s in STATUS" :key="s.v" :value="s.v">{{ s.l }}</option>
       </select>
-      <select v-model="type" class="input sm:max-w-[180px]" @change="load">
+      <select v-model="type" class="input sm:max-w-[180px]" @change="resetAndLoad">
         <option v-for="t in TYPES" :key="t.v" :value="t.v">{{ t.l }}</option>
       </select>
     </div>
@@ -98,5 +111,7 @@ onMounted(load)
       </button>
       <p v-if="!invoices.length" class="py-6 text-center text-sm text-ink-soft">Keine Rechnungen gefunden.</p>
     </div>
+
+    <Pagination :page="page" :limit="limit" :total="total" @go="goPage" />
   </AppShell>
 </template>

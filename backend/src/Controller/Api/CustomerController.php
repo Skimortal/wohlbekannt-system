@@ -33,9 +33,7 @@ class CustomerController extends ApiController
             $qb->andWhere('c.companyName LIKE :q OR c.firstName LIKE :q OR c.lastName LIKE :q OR c.customerNumber LIKE :q OR c.email LIKE :q')
                 ->setParameter('q', '%'.$q.'%');
         }
-        $items = $qb->setMaxResults(200)->getQuery()->getResult();
-
-        return $this->json(array_map([$this->presenter, 'customer'], $items));
+        return $this->listResponse($qb, $request, [$this->presenter, 'customer']);
     }
 
     #[Route('/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]

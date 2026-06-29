@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
+import Pagination from '../components/Pagination.vue'
 import api from '../api'
 import { eur, formatDate } from '../lib/format'
 
@@ -10,6 +11,9 @@ const router = useRouter()
 const quotes = ref<any[]>([])
 const search = ref('')
 const status = ref('')
+const page = ref(1)
+const limit = 25
+const total = ref(0)
 
 const STATUS = [
   { v: '', l: 'Alle Status' },
@@ -21,8 +25,17 @@ const STATUS = [
 ]
 
 async function load() {
-  const { data } = await api.get('/api/quotes', { params: { q: search.value, status: status.value } })
-  quotes.value = data
+  const { data } = await api.get('/api/quotes', { params: { q: search.value, status: status.value, page: page.value, limit } })
+  quotes.value = data.items
+  total.value = data.total
+}
+function resetAndLoad() {
+  page.value = 1
+  load()
+}
+function goPage(p: number) {
+  page.value = p
+  load()
 }
 onMounted(load)
 </script>
@@ -36,8 +49,8 @@ onMounted(load)
     </div>
 
     <div class="mb-4 flex flex-col gap-2 sm:flex-row">
-      <input v-model="search" class="input sm:max-w-xs" placeholder="Suchen (Nr., Kunde) …" @input="load" />
-      <select v-model="status" class="input sm:max-w-[200px]" @change="load">
+      <input v-model="search" class="input sm:max-w-xs" placeholder="Suchen (Nr., Kunde) …" @input="resetAndLoad" />
+      <select v-model="status" class="input sm:max-w-[200px]" @change="resetAndLoad">
         <option v-for="s in STATUS" :key="s.v" :value="s.v">{{ s.l }}</option>
       </select>
     </div>
@@ -83,5 +96,7 @@ onMounted(load)
       </button>
       <p v-if="!quotes.length" class="py-6 text-center text-sm text-ink-soft">Keine Angebote gefunden.</p>
     </div>
+
+    <Pagination :page="page" :limit="limit" :total="total" @go="goPage" />
   </AppShell>
 </template>

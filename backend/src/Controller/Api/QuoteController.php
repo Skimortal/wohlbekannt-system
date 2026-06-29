@@ -50,9 +50,7 @@ class QuoteController extends ApiController
         if ($search = trim((string) $request->query->get('q', ''))) {
             $qb->andWhere('q.number LIKE :q OR q.recipientName LIKE :q')->setParameter('q', '%'.$search.'%');
         }
-        $items = $qb->setMaxResults(200)->getQuery()->getResult();
-
-        return $this->json(array_map(fn (Quote $q) => $this->presenter->quote($q, false), $items));
+        return $this->listResponse($qb, $request, fn (Quote $q) => $this->presenter->quote($q, false));
     }
 
     #[Route('/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]

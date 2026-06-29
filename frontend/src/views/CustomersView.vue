@@ -2,11 +2,15 @@
 import { onMounted, reactive, ref } from 'vue'
 import AppShell from '../components/AppShell.vue'
 import Modal from '../components/Modal.vue'
+import Pagination from '../components/Pagination.vue'
 import api from '../api'
 import { formatDate } from '../lib/format'
 
 const customers = ref<any[]>([])
 const search = ref('')
+const page = ref(1)
+const limit = 25
+const total = ref(0)
 const showModal = ref(false)
 const saving = ref(false)
 const form = reactive<any>(blank())
@@ -20,8 +24,17 @@ function blank() {
 }
 
 async function load() {
-  const { data } = await api.get('/api/customers', { params: { q: search.value } })
-  customers.value = data
+  const { data } = await api.get('/api/customers', { params: { q: search.value, page: page.value, limit } })
+  customers.value = data.items
+  total.value = data.total
+}
+function resetAndLoad() {
+  page.value = 1
+  load()
+}
+function goPage(p: number) {
+  page.value = p
+  load()
 }
 
 function openNew() {
@@ -64,7 +77,7 @@ onMounted(load)
     </div>
 
     <div class="mb-4">
-      <input v-model="search" class="input max-w-xs" placeholder="Suchen …" @input="load" />
+      <input v-model="search" class="input max-w-xs" placeholder="Suchen …" @input="resetAndLoad" />
     </div>
 
     <!-- desktop table -->
@@ -109,6 +122,8 @@ onMounted(load)
       </div>
       <p v-if="!customers.length" class="py-6 text-center text-sm text-ink-soft">Keine Kunden gefunden.</p>
     </div>
+
+    <Pagination :page="page" :limit="limit" :total="total" @go="goPage" />
 
     <Modal v-if="showModal" :title="form.id ? 'Kunde bearbeiten' : 'Neuer Kunde'" @close="showModal = false">
       <div class="grid grid-cols-2 gap-4">
