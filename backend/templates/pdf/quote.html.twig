@@ -3,111 +3,89 @@
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4; margin: 18mm 16mm 32mm 16mm; }
-  * { box-sizing: border-box; }
-  html, body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    color: #0e1214;
-    font-size: 10.5px;
-    line-height: 1.45;
-    margin: 0;
-  }
+  body { font-family: sans-serif; color: #0e1214; font-size: 10.5px; line-height: 1.45; }
   .muted { color: #6b7176; }
   .right { text-align: right; }
-  .nums { font-variant-numeric: tabular-nums; }
+  .issuer-line { font-size: 8px; color: #6b7176; }
+  .logo { width: 150px; }
 
-  /* header */
-  .top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .issuer-line { font-size: 8px; color: #6b7176; margin-bottom: 28px; }
-  .logo { height: 54px; }
+  table.meta { width: 100%; border-collapse: collapse; }
+  table.meta td { padding: 1px 0; vertical-align: top; }
+  table.meta .label { color: #6b7176; padding-right: 16px; }
 
-  .meta { width: 100%; border-collapse: collapse; }
-  .meta td { padding: 1px 0; vertical-align: top; }
-  .meta .label { color: #6b7176; padding-right: 16px; }
-
-  .addresses { display: flex; justify-content: space-between; gap: 24px; margin-top: 8px; }
-  .recipient { max-width: 60%; }
-
-  h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.2px; margin: 26px 0 14px; }
-  .intro { white-space: pre-line; margin-bottom: 16px; }
+  h1 { font-size: 18px; font-weight: bold; margin: 22px 0 12px; }
+  .intro { margin-bottom: 14px; }
 
   table.items { width: 100%; border-collapse: collapse; margin-top: 6px; }
   table.items thead th {
     text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px;
-    color: #3a3f42; border-bottom: 1px solid #0e1214; padding: 6px 6px;
+    color: #3a3f42; border-bottom: 1px solid #0e1214; padding: 6px 5px;
   }
   table.items thead th.r { text-align: right; }
-  table.items td { padding: 9px 6px; vertical-align: top; border-bottom: 1px solid #ece8e2; }
-  .pos { width: 34px; color: #3a3f42; }
-  .col-qty { width: 88px; }
-  .col-price { width: 92px; }
-  .col-total { width: 100px; }
-  .item-title { font-weight: 600; }
-  .item-desc { white-space: pre-line; color: #3a3f42; margin-top: 2px; }
+  table.items td { padding: 8px 5px; vertical-align: top; border-bottom: 0.5px solid #ece8e2; }
+  .pos { width: 42px; color: #3a3f42; }
+  .col-qty { width: 78px; }
+  .col-price { width: 88px; }
+  .col-total { width: 96px; }
+  .item-title { font-weight: bold; }
+  .item-desc { color: #3a3f42; margin-top: 2px; }
   .tax-note { font-size: 8px; color: #6b7176; }
 
-  /* optional positions: sand chip, inset, parenthesised prices */
-  tr.optional td { background: #faf3ea; color: #6b7176; }
+  tr.optional td { background-color: #faf3ea; color: #6b7176; }
   tr.optional .item-title { color: #3a3f42; }
   .opt-chip {
-    display: inline-block; font-size: 7.5px; font-weight: 600; letter-spacing: 0.3px;
-    color: #8a5a2e; background: #f3e6d6; border: 1px solid #e6c7a9;
-    border-radius: 3px; padding: 1px 4px;
+    font-size: 7.5px; font-weight: bold; color: #8a5a2e;
+    background-color: #f3e6d6; border: 0.5px solid #e6c7a9;
+    border-radius: 3px; padding: 1px 3px;
   }
 
-  .totals { width: 52%; margin-left: auto; margin-top: 14px; border-collapse: collapse; }
-  .totals td { padding: 5px 6px; }
-  .totals .t-label { color: #3a3f42; }
-  .totals tr.grand td { font-weight: 700; border-top: 1px solid #0e1214; }
-  .totals tr.optsum td { color: #6b7176; }
+  table.totals { width: 55%; border-collapse: collapse; margin-top: 12px; }
+  table.totals td { padding: 4px 5px; }
+  table.totals .t-label { color: #3a3f42; }
+  table.totals tr.grand td { font-weight: bold; border-top: 1px solid #0e1214; }
+  table.totals tr.optsum td { color: #6b7176; }
 
-  .legal { margin-top: 14px; font-size: 9px; color: #3a3f42; }
-  .outro { white-space: pre-line; margin-top: 22px; }
-
-  footer {
-    position: fixed; bottom: -22mm; left: 0; right: 0;
-    border-top: 1px solid #ece8e2; padding-top: 6px;
-    font-size: 7.5px; color: #6b7176;
-    display: flex; justify-content: space-between; gap: 12px;
-  }
-  footer div { flex: 1; }
+  .legal { margin-top: 12px; font-size: 9px; color: #3a3f42; }
+  .outro { margin-top: 20px; }
 </style>
 </head>
 <body>
 
-  <div class="top">
-    <div>
-      <div class="issuer-line">
+  <table style="width:100%; border-collapse:collapse;">
+    <tr>
+      <td style="vertical-align:top;" class="issuer-line">
         {{ company.legalName }} &nbsp;·&nbsp; {{ company.address.street }} &nbsp;·&nbsp;
         {{ company.address.postalCode }} {{ company.address.city }}
-      </div>
-    </div>
-    {% if logoName %}<img class="logo" src="{{ logoName }}" alt="{{ company.legalName }}">{% endif %}
-  </div>
+      </td>
+      <td style="width:160px; vertical-align:top; text-align:right;">
+        {% if logoSrc %}<img class="logo" src="{{ logoSrc }}">{% endif %}
+      </td>
+    </tr>
+  </table>
 
-  <div class="addresses">
-    <div class="recipient">
-      <strong>{{ quote.recipientName }}</strong><br>
-      {% if quote.recipientAddress.street %}{{ quote.recipientAddress.street }}<br>{% endif %}
-      {% if quote.recipientAddress.postalCode or quote.recipientAddress.city %}
-        {{ quote.recipientAddress.postalCode }} {{ quote.recipientAddress.city }}<br>
-      {% endif %}
-      {{ quote.recipientAddress.countryCode == 'AT' ? 'Österreich' : quote.recipientAddress.countryCode }}
-    </div>
-    <div style="min-width: 230px;">
-      <table class="meta">
-        <tr><td class="label">Angebots-Nr.</td><td class="right">{{ quote.number ?? 'Entwurf' }}</td></tr>
-        <tr><td class="label">Datum</td><td class="right">{{ quote.issueDate|date('d.m.Y') }}</td></tr>
-        {% if quote.validUntil %}<tr><td class="label">Gültig bis</td><td class="right">{{ quote.validUntil|date('d.m.Y') }}</td></tr>{% endif %}
-        {% if quote.recipientCustomerNumber %}<tr><td class="label">Ihre Kundennummer</td><td class="right">{{ quote.recipientCustomerNumber }}</td></tr>{% endif %}
-        {% if quote.contactPerson %}<tr><td class="label">Ihr Ansprechpartner</td><td class="right">{{ quote.contactPerson }}</td></tr>{% endif %}
-      </table>
-    </div>
-  </div>
+  <table style="width:100%; border-collapse:collapse; margin-top:22px;">
+    <tr>
+      <td style="vertical-align:top;">
+        <strong>{{ quote.recipientName }}</strong><br>
+        {% if quote.recipientAddress.street %}{{ quote.recipientAddress.street }}<br>{% endif %}
+        {% if quote.recipientAddress.postalCode or quote.recipientAddress.city %}{{ quote.recipientAddress.postalCode }} {{ quote.recipientAddress.city }}<br>{% endif %}
+        {{ quote.recipientAddress.countryCode == 'AT' ? 'Österreich' : quote.recipientAddress.countryCode }}
+      </td>
+      <td style="width:250px; vertical-align:top;">
+        <table class="meta">
+          <tr><td class="label">Angebots-Nr.</td><td class="right">{{ quote.number ?? 'Entwurf' }}</td></tr>
+          <tr><td class="label">Datum</td><td class="right">{{ quote.issueDate|date('d.m.Y') }}</td></tr>
+          {% if quote.validUntil %}<tr><td class="label">Gültig bis</td><td class="right">{{ quote.validUntil|date('d.m.Y') }}</td></tr>{% endif %}
+          {% if quote.recipientCustomerNumber %}<tr><td class="label">Ihre Kundennummer</td><td class="right">{{ quote.recipientCustomerNumber }}</td></tr>{% endif %}
+          {% if quote.contactPerson %}<tr><td class="label">Ihr Ansprechpartner</td><td class="right">{{ quote.contactPerson }}</td></tr>{% endif %}
+        </table>
+      </td>
+    </tr>
+  </table>
 
   <h1>Angebot {{ quote.number ?? '' }}</h1>
 
-  {% if quote.introText %}<div class="intro">{{ quote.introText }}</div>{% endif %}
+  {% if quote.introText %}<div class="intro">{{ quote.introText|nl2br }}</div>{% endif %}
 
   <table class="items">
     <thead>
@@ -127,13 +105,13 @@
           <td class="pos">{% if item.optional %}<span class="opt-chip">Opt.</span>{% else %}{{ num }}.{% endif %}</td>
           <td>
             <div class="item-title">{{ item.title }}</div>
-            {% if item.description %}<div class="item-desc">{{ item.description }}</div>{% endif %}
+            {% if item.description %}<div class="item-desc">{{ item.description|nl2br }}</div>{% endif %}
           </td>
-          <td class="r col-qty nums">
+          <td class="r col-qty">
             {% if item.unit == 'pauschal' %}pauschal{% else %}{{ item.quantity|qty }}<br><span class="muted">{{ item.unit }}</span>{% endif %}
           </td>
-          <td class="r col-price nums">{{ item.unitPrice|money }} {{ quote.currency }}</td>
-          <td class="r col-total nums">
+          <td class="r col-price">{{ item.unitPrice|money }} {{ quote.currency }}</td>
+          <td class="r col-total">
             {% if item.optional %}({{ item.lineGross|money }} {{ quote.currency }}){% else %}<strong>{{ item.lineGross|money }} {{ quote.currency }}</strong>{% endif %}
             <div class="tax-note">{% if item.taxCategory.value == 'standard' %}(Steuer {{ item.vatRate|qty }}%){% else %}({{ item.taxCategory.value }}){% endif %}</div>
           </td>
@@ -142,12 +120,10 @@
     </tbody>
   </table>
 
-  <table class="totals nums">
+  <table class="totals" align="right">
     <tr><td class="t-label">Gesamtbetrag netto</td><td class="right">{{ quote.totalNet|money }} {{ quote.currency }}</td></tr>
     {% for g in quote.taxBreakdown %}
-      {% if g.tax > 0 %}
-        <tr><td class="t-label">zzgl. Umsatzsteuer {{ g.rate|qty }}%</td><td class="right">{{ g.tax|money }} {{ quote.currency }}</td></tr>
-      {% endif %}
+      {% if g.tax > 0 %}<tr><td class="t-label">zzgl. Umsatzsteuer {{ g.rate|qty }}%</td><td class="right">{{ g.tax|money }} {{ quote.currency }}</td></tr>{% endif %}
     {% endfor %}
     <tr class="grand"><td>Gesamtbetrag brutto</td><td class="right">{{ quote.totalGross|money }} {{ quote.currency }}</td></tr>
     {% if quote.optionalTotalGross > 0 %}
@@ -157,15 +133,11 @@
 
   {% set notes = [] %}
   {% for item in quote.items %}
-    {% if item.taxCategory.legalNote and item.taxCategory.legalNote not in notes %}
-      {% set notes = notes|merge([item.taxCategory.legalNote]) %}
-    {% endif %}
+    {% if item.taxCategory.legalNote and item.taxCategory.legalNote not in notes %}{% set notes = notes|merge([item.taxCategory.legalNote]) %}{% endif %}
   {% endfor %}
-  {% if notes is not empty %}
-    <div class="legal">{% for n in notes %}{{ n }}<br>{% endfor %}</div>
-  {% endif %}
+  {% if notes is not empty %}<div class="legal" style="clear:both;">{% for n in notes %}{{ n }}<br>{% endfor %}</div>{% endif %}
 
-  {% if quote.outroText %}<div class="outro">{{ quote.outroText }}</div>{% endif %}
+  {% if quote.outroText %}<div class="outro" style="clear:both;">{{ quote.outroText|nl2br }}</div>{% endif %}
 
 </body>
 </html>

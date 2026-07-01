@@ -1,48 +1,27 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<style>
-  /* Gotenberg/Chromium footer: rendered in the bottom page margin on every page. */
-  html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-  .footer {
-    width: 100%;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 6.5px;
-    color: #6b7176;
-    padding: 4px 16mm 0 16mm;
-    box-sizing: border-box;
-  }
-  .cols { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid #ece8e2; padding-top: 4px; }
-  .cols div { flex: 1; line-height: 1.4; }
-</style>
-</head>
-<body>
-  <div class="footer">
-    <div class="cols">
-      <div>
-        {{ company.legalName }}<br>
-        {{ company.address.street }}<br>
-        {{ company.address.postalCode }} {{ company.address.city }}<br>
-        {{ company.address.countryCode == 'AT' ? 'Österreich' : company.address.countryCode }}
-      </div>
-      <div>
-        {% if company.phone %}Tel. {{ company.phone }}<br>{% endif %}
-        {% if company.email %}{{ company.email }}<br>{% endif %}
-        {% if company.web %}{{ company.web }}{% endif %}
-      </div>
-      <div>
-        {% if company.companyRegisterNumber %}FN-Nr. {{ company.companyRegisterNumber }}<br>{% endif %}
-        {% if company.vatId %}USt.-ID {{ company.vatId }}<br>{% endif %}
-        {% if company.taxNumber %}Steuer-Nr. {{ company.taxNumber }}<br>{% endif %}
-        {% if company.managingDirector %}GF {{ company.managingDirector }}{% endif %}
-      </div>
-      <div>
-        {% if company.bankName %}{{ company.bankName }}<br>{% endif %}
-        {% if company.iban %}IBAN {{ company.iban }}<br>{% endif %}
-        {% if company.bic %}BIC {{ company.bic }}{% endif %}
-      </div>
-    </div>
-  </div>
-</body>
-</html>
+{# Fragment for mpdf SetHTMLFooter — rendered in the bottom margin on every page. #}
+<table style="width:100%; border-collapse:collapse; border-top:0.5px solid #ece8e2; font-family:sans-serif; font-size:6.8px; color:#6b7176;">
+  <tr>
+    <td style="width:25%; vertical-align:top; padding-top:4px; line-height:1.4;">
+      {{ company.legalName }}<br>
+      {{ company.address.street }}<br>
+      {{ company.address.postalCode }} {{ company.address.city }}<br>
+      {{ company.address.countryCode == 'AT' ? 'Österreich' : company.address.countryCode }}
+    </td>
+    <td style="width:25%; vertical-align:top; padding-top:4px; line-height:1.4;">
+      {% if company.phone %}Tel. {{ company.phone }}<br>{% endif %}
+      {% if company.email %}{{ company.email }}<br>{% endif %}
+      {% if company.web %}{{ company.web }}{% endif %}
+    </td>
+    <td style="width:25%; vertical-align:top; padding-top:4px; line-height:1.4;">
+      {% if company.companyRegisterNumber %}FN-Nr. {{ company.companyRegisterNumber }}<br>{% endif %}
+      {% if company.vatId %}USt.-ID {{ company.vatId }}<br>{% endif %}
+      {% if company.taxNumber %}Steuer-Nr. {{ company.taxNumber }}<br>{% endif %}
+      {% if company.managingDirector %}GF {{ company.managingDirector }}{% endif %}
+    </td>
+    <td style="width:25%; vertical-align:top; padding-top:4px; line-height:1.4;">
+      {% if company.bankName %}{{ company.bankName }}<br>{% endif %}
+      {% if company.iban %}IBAN {{ company.iban }}<br>{% endif %}
+      {% if company.bic %}BIC {{ company.bic }}{% endif %}
+    </td>
+  </tr>
+</table>

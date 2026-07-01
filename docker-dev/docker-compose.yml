@@ -44,13 +44,6 @@ services:
       timeout: 5s
       retries: 20
 
-  gotenberg:
-    image: gotenberg/gotenberg:8
-    # Chromium-based HTML -> PDF rendering for quotes & invoices
-    command:
-      - "gotenberg"
-      - "--chromium-disable-web-security"
-
   # Vite dev server for the Vue SPA (proxies /api -> web:80)
   frontend:
     image: node:22-alpine

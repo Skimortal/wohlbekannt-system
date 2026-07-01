@@ -14,7 +14,6 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
-            string $gotenbergUrl: '%env(GOTENBERG_URL)%'
             string $assetsDir: '%kernel.project_dir%/assets'
             string $frontendUrl: '%env(APP_FRONTEND_URL)%'
             string $mailerFrom: '%env(MAILER_FROM)%'

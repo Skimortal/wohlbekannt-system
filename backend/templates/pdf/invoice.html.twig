@@ -3,79 +3,77 @@
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4; }
-  * { box-sizing: border-box; }
-  html, body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0e1214; font-size: 10.5px; line-height: 1.45; margin: 0; }
+  body { font-family: sans-serif; color: #0e1214; font-size: 10.5px; line-height: 1.45; }
   .muted { color: #6b7176; }
   .right { text-align: right; }
-  .nums { font-variant-numeric: tabular-nums; }
-  .top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .issuer-line { font-size: 8px; color: #6b7176; margin-bottom: 28px; }
-  .logo { height: 54px; }
-  .meta { width: 100%; border-collapse: collapse; }
-  .meta td { padding: 1px 0; vertical-align: top; }
-  .meta .label { color: #6b7176; padding-right: 16px; }
-  .addresses { display: flex; justify-content: space-between; gap: 24px; margin-top: 8px; }
-  .recipient { max-width: 60%; }
-  h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.2px; margin: 26px 0 4px; }
-  .subtitle { color: #6b7176; margin-bottom: 14px; }
-  .intro { white-space: pre-line; margin-bottom: 16px; }
+  .issuer-line { font-size: 8px; color: #6b7176; }
+  .logo { width: 150px; }
+  table.meta { width: 100%; border-collapse: collapse; }
+  table.meta td { padding: 1px 0; vertical-align: top; }
+  table.meta .label { color: #6b7176; padding-right: 16px; }
+  h1 { font-size: 18px; font-weight: bold; margin: 22px 0 4px; }
+  .subtitle { color: #6b7176; margin-bottom: 12px; }
+  .intro { margin-bottom: 14px; }
   table.items { width: 100%; border-collapse: collapse; margin-top: 6px; }
-  table.items thead th { text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #3a3f42; border-bottom: 1px solid #0e1214; padding: 6px 6px; }
+  table.items thead th { text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #3a3f42; border-bottom: 1px solid #0e1214; padding: 6px 5px; }
   table.items thead th.r { text-align: right; }
-  table.items td { padding: 9px 6px; vertical-align: top; border-bottom: 1px solid #ece8e2; }
-  .pos { width: 34px; color: #3a3f42; }
-  .col-qty { width: 88px; }
-  .col-price { width: 92px; }
-  .col-total { width: 100px; }
-  .item-title { font-weight: 600; }
-  .item-desc { white-space: pre-line; color: #3a3f42; margin-top: 2px; }
+  table.items td { padding: 8px 5px; vertical-align: top; border-bottom: 0.5px solid #ece8e2; }
+  .pos { width: 42px; color: #3a3f42; }
+  .col-qty { width: 78px; }
+  .col-price { width: 88px; }
+  .col-total { width: 96px; }
+  .item-title { font-weight: bold; }
+  .item-desc { color: #3a3f42; margin-top: 2px; }
   .tax-note { font-size: 8px; color: #6b7176; }
-  .totals { width: 52%; margin-left: auto; margin-top: 14px; border-collapse: collapse; }
-  .totals td { padding: 5px 6px; }
-  .totals .t-label { color: #3a3f42; }
-  .totals tr.grand td { font-weight: 700; border-top: 1px solid #0e1214; }
-  .legal { margin-top: 14px; font-size: 9px; color: #3a3f42; }
-  .payinfo { margin-top: 18px; padding: 10px 12px; background: #faf3ea; border: 1px solid #f3e6d6; border-radius: 6px; font-size: 9.5px; }
-  .outro { white-space: pre-line; margin-top: 22px; }
+  table.totals { width: 55%; border-collapse: collapse; margin-top: 12px; }
+  table.totals td { padding: 4px 5px; }
+  table.totals .t-label { color: #3a3f42; }
+  table.totals tr.grand td { font-weight: bold; border-top: 1px solid #0e1214; }
+  .legal { margin-top: 12px; font-size: 9px; color: #3a3f42; }
+  .payinfo { margin-top: 16px; padding: 9px 11px; background-color: #faf3ea; border: 0.5px solid #f3e6d6; border-radius: 6px; font-size: 9.5px; }
+  .outro { margin-top: 20px; }
 </style>
 </head>
 <body>
   {% set title = invoice.type.value == 'credit_note' ? 'Gutschrift' : (invoice.type.value == 'cancellation' ? 'Stornorechnung' : 'Rechnung') %}
 
-  <div class="top">
-    <div>
-      <div class="issuer-line">
+  <table style="width:100%; border-collapse:collapse;">
+    <tr>
+      <td style="vertical-align:top;" class="issuer-line">
         {{ company.legalName }} &nbsp;·&nbsp; {{ company.address.street }} &nbsp;·&nbsp;
         {{ company.address.postalCode }} {{ company.address.city }}
-      </div>
-    </div>
-    {% if logoName %}<img class="logo" src="{{ logoName }}" alt="{{ company.legalName }}">{% endif %}
-  </div>
+      </td>
+      <td style="width:160px; vertical-align:top; text-align:right;">
+        {% if logoSrc %}<img class="logo" src="{{ logoSrc }}">{% endif %}
+      </td>
+    </tr>
+  </table>
 
-  <div class="addresses">
-    <div class="recipient">
-      <strong>{{ invoice.recipientName }}</strong><br>
-      {% if invoice.recipientAddress.street %}{{ invoice.recipientAddress.street }}<br>{% endif %}
-      {% if invoice.recipientAddress.postalCode or invoice.recipientAddress.city %}{{ invoice.recipientAddress.postalCode }} {{ invoice.recipientAddress.city }}<br>{% endif %}
-      {{ invoice.recipientAddress.countryCode == 'AT' ? 'Österreich' : invoice.recipientAddress.countryCode }}
-    </div>
-    <div style="min-width: 240px;">
-      <table class="meta">
-        <tr><td class="label">{{ title }}-Nr.</td><td class="right">{{ invoice.number ?? 'Entwurf' }}</td></tr>
-        <tr><td class="label">Datum</td><td class="right">{{ invoice.issueDate|date('d.m.Y') }}</td></tr>
-        {% if invoice.dueDate and invoice.type.value == 'invoice' %}<tr><td class="label">Fällig bis</td><td class="right">{{ invoice.dueDate|date('d.m.Y') }}</td></tr>{% endif %}
-        {% if invoice.servicePeriodStart %}<tr><td class="label">Leistungszeitraum</td><td class="right">{{ invoice.servicePeriodStart|date('d.m.Y') }}{% if invoice.servicePeriodEnd %}–{{ invoice.servicePeriodEnd|date('d.m.Y') }}{% endif %}</td></tr>{% endif %}
-        {% if invoice.recipientCustomerNumber %}<tr><td class="label">Ihre Kundennummer</td><td class="right">{{ invoice.recipientCustomerNumber }}</td></tr>{% endif %}
-        {% if invoice.recipientVatId %}<tr><td class="label">USt-ID</td><td class="right">{{ invoice.recipientVatId }}</td></tr>{% endif %}
-      </table>
-    </div>
-  </div>
+  <table style="width:100%; border-collapse:collapse; margin-top:22px;">
+    <tr>
+      <td style="vertical-align:top;">
+        <strong>{{ invoice.recipientName }}</strong><br>
+        {% if invoice.recipientAddress.street %}{{ invoice.recipientAddress.street }}<br>{% endif %}
+        {% if invoice.recipientAddress.postalCode or invoice.recipientAddress.city %}{{ invoice.recipientAddress.postalCode }} {{ invoice.recipientAddress.city }}<br>{% endif %}
+        {{ invoice.recipientAddress.countryCode == 'AT' ? 'Österreich' : invoice.recipientAddress.countryCode }}
+      </td>
+      <td style="width:250px; vertical-align:top;">
+        <table class="meta">
+          <tr><td class="label">{{ title }}-Nr.</td><td class="right">{{ invoice.number ?? 'Entwurf' }}</td></tr>
+          <tr><td class="label">Datum</td><td class="right">{{ invoice.issueDate|date('d.m.Y') }}</td></tr>
+          {% if invoice.dueDate and invoice.type.value == 'invoice' %}<tr><td class="label">Fällig bis</td><td class="right">{{ invoice.dueDate|date('d.m.Y') }}</td></tr>{% endif %}
+          {% if invoice.servicePeriodStart %}<tr><td class="label">Leistungszeitraum</td><td class="right">{{ invoice.servicePeriodStart|date('d.m.Y') }}{% if invoice.servicePeriodEnd %}–{{ invoice.servicePeriodEnd|date('d.m.Y') }}{% endif %}</td></tr>{% endif %}
+          {% if invoice.recipientCustomerNumber %}<tr><td class="label">Ihre Kundennummer</td><td class="right">{{ invoice.recipientCustomerNumber }}</td></tr>{% endif %}
+          {% if invoice.recipientVatId %}<tr><td class="label">USt-ID</td><td class="right">{{ invoice.recipientVatId }}</td></tr>{% endif %}
+        </table>
+      </td>
+    </tr>
+  </table>
 
   <h1>{{ title }} {{ invoice.number ?? '' }}</h1>
   {% if invoice.cancelsInvoice %}<div class="subtitle">Bezug: Rechnung {{ invoice.cancelsInvoice.number }} vom {{ invoice.cancelsInvoice.issueDate|date('d.m.Y') }}</div>{% endif %}
 
-  {% if invoice.introText %}<div class="intro">{{ invoice.introText }}</div>{% endif %}
+  {% if invoice.introText %}<div class="intro">{{ invoice.introText|nl2br }}</div>{% endif %}
 
   <table class="items">
     <thead>
@@ -95,11 +93,11 @@
           <td class="pos">{{ num }}.</td>
           <td>
             <div class="item-title">{{ item.title }}</div>
-            {% if item.description %}<div class="item-desc">{{ item.description }}</div>{% endif %}
+            {% if item.description %}<div class="item-desc">{{ item.description|nl2br }}</div>{% endif %}
           </td>
-          <td class="r col-qty nums">{% if item.unit == 'pauschal' %}pauschal{% else %}{{ item.quantity|qty }}<br><span class="muted">{{ item.unit }}</span>{% endif %}</td>
-          <td class="r col-price nums">{{ item.unitPrice|money }} {{ invoice.currency }}</td>
-          <td class="r col-total nums">
+          <td class="r col-qty">{% if item.unit == 'pauschal' %}pauschal{% else %}{{ item.quantity|qty }}<br><span class="muted">{{ item.unit }}</span>{% endif %}</td>
+          <td class="r col-price">{{ item.unitPrice|money }} {{ invoice.currency }}</td>
+          <td class="r col-total">
             <strong>{{ item.lineGross|money }} {{ invoice.currency }}</strong>
             <div class="tax-note">{% if item.taxCategory.value == 'standard' %}(Steuer {{ item.vatRate|qty }}%){% else %}({{ item.taxCategory.value }}){% endif %}</div>
           </td>
@@ -108,7 +106,7 @@
     </tbody>
   </table>
 
-  <table class="totals nums">
+  <table class="totals" align="right">
     <tr><td class="t-label">Gesamtbetrag netto</td><td class="right">{{ invoice.totalNet|money }} {{ invoice.currency }}</td></tr>
     {% for g in invoice.taxBreakdown %}
       {% if g.tax != 0 %}<tr><td class="t-label">zzgl. Umsatzsteuer {{ g.rate|qty }}%</td><td class="right">{{ g.tax|money }} {{ invoice.currency }}</td></tr>{% endif %}
@@ -119,6 +117,8 @@
       <tr class="grand"><td>Offener Betrag</td><td class="right">{{ invoice.openAmount|money }} {{ invoice.currency }}</td></tr>
     {% endif %}
   </table>
+
+  <div style="clear:both;"></div>
 
   {% set notes = [] %}
   {% for item in invoice.items %}
@@ -136,6 +136,6 @@
     </div>
   {% endif %}
 
-  {% if invoice.outroText %}<div class="outro">{{ invoice.outroText }}</div>{% endif %}
+  {% if invoice.outroText %}<div class="outro">{{ invoice.outroText|nl2br }}</div>{% endif %}
 </body>
 </html>

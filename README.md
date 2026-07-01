@@ -13,11 +13,12 @@ Lagerverwaltung u. a.
 | `backend/` | Symfony 7.4 REST-API, PHP 8.4, Doctrine ORM, MySQL 8, JWT (LexikJWT) |
 | `frontend/` | Vue 3 + Vite + TypeScript + Pinia + vue-router + Tailwind 4 (SPA) |
 | `mcp-server/` | Node/TS MCP-Server (stdio) für Claude Desktop — auth via Backend-REST |
-| PDF | Gotenberg (Chromium HTML→PDF), Twig-Templates |
-| `docker-dev/` | Lokale Entwicklung (php-fpm, nginx, mysql, gotenberg, vite) |
+| PDF | mpdf (pure PHP), Twig-Templates (Tabellen-Layout) |
+| `docker-dev/` | Lokale Entwicklung (php-fpm, nginx, mysql, vite) |
 
-> Der Kunde betreibt **nativ** PHP + MySQL. Lokal wird mit Docker gearbeitet; es gibt
-> keine Docker-only-Abhängigkeit (Gotenberg läuft beim Kunden als eigener Dienst).
+> Der Kunde betreibt **nativ** PHP + MySQL (All-Inkl/KAS Shared-Hosting). Lokal wird mit
+> Docker gearbeitet; es gibt keine Docker-/Service-only-Abhängigkeit — PDF läuft via mpdf
+> rein in PHP.
 
 ## Lokale Entwicklung
 
@@ -36,7 +37,6 @@ docker compose exec php php bin/console lexik:jwt:generate-keypair --skip-if-exi
 - API / Backend: http://localhost:8088  (`GET /api/health`)
 - Frontend (Vite): http://localhost:5173
 - MySQL: `localhost:33060` (db `wohlbekannt`, user `app` / `app`)
-- Gotenberg: intern `http://gotenberg:3000`
 
 ## Verzeichnisse
 

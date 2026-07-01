@@ -14,10 +14,11 @@ daran orientieren wir uns funktional.
 - Stack gespiegelt von `../mc-cockpit`: Symfony 7.4 REST-API + LexikJWT, Vue 3 + Vite +
   Pinia + Tailwind 4 (SPA), Node/TS MCP-Server (stdio).
 - **DB: MySQL 8** (Kunde läuft nativ MySQL) — nicht PostgreSQL wie mc-cockpit.
-- **PDF: Gotenberg** (Chromium HTML→PDF) + Twig-Templates. Bewusst gegen dompdf, um für
-  spätere Layout-Anpassungen flexibel zu sein.
-- Lokal **Docker** (`docker-dev/`); Kunde deployt **nativ** (PHP-FPM + MySQL + Gotenberg
-  als eigener Dienst). Keine Docker-only-Abhängigkeiten einbauen.
+- **PDF: mpdf** (pure PHP) + Twig-Templates (Tabellen-Layout, DejaVu-Sans). Ursprünglich
+  Gotenberg geplant, aber der Kunde läuft auf **All-Inkl/KAS Shared-Hosting** (kein Docker/
+  Dauer-Dienste möglich) → auf mpdf umgestellt, damit alles auf dem Hoster läuft.
+- Lokal **Docker** (`docker-dev/`); Kunde deployt **nativ** auf Shared-Hosting. Keine
+  Docker-/Service-only-Abhängigkeiten einbauen.
 
 ## Fachliche Eckpunkte
 - **Kein RKSV / keine Registrierkasse** — nur normale Rechnungslegung für Dienstleistungen
