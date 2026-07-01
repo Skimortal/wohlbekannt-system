@@ -13,3 +13,6 @@ backend/vendor/
 # Docker local overrides
 docker-dev/.env
 .env.local
+
+# Deploy secrets (never commit)
+deploy/.deploy.env

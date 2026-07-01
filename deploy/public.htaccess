@@ -1,0 +1,26 @@
+# Wird als .htaccess in public/ gelegt (der spätere Docroot der Subdomain).
+# /api/* -> Symfony-Frontcontroller; vorhandene Dateien direkt; sonst SPA (index.html).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # API + Symfony-Routen an den Frontcontroller
+    RewriteRule ^api(/.*)?$ index.php [QSA,L]
+
+    # Existierende Dateien (SPA-Assets, Bilder) direkt ausliefern
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Alles andere -> SPA-Einstieg (Vue-Router, History-Mode)
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Sensible Dateien niemals ausliefern (Sicherheitsnetz)
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

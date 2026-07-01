@@ -1,0 +1,11 @@
+# Wird als .htaccess in das App-Wurzelverzeichnis (erp.wohlbekannt.at/) gelegt.
+# Sperrt ALLES, solange der Subdomain-Docroot noch nicht auf .../public zeigt.
+# Nach der Docroot-Umstellung liegt diese Datei OBERHALB des Webroots und ist
+# damit wirkungslos — public/.htaccess übernimmt dann das Routing.
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order deny,allow
+  Deny from all
+</IfModule>
