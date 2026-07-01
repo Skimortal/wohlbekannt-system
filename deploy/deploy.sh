@@ -78,9 +78,13 @@ ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console cache:clear"
 echo "== 9/9  Verifikation (lokaler PHP-Server auf dem Server, nicht öffentlich) =="
 ssh "$SSH_HOST" "cd '$APP_DIR' && ($PHP -S 127.0.0.1:8123 public/index.php >/tmp/wb_srv.log 2>&1 & SP=\$!; sleep 2; echo -n 'health: '; curl -s http://127.0.0.1:8123/api/health; echo; TOK=\$(curl -s -X POST http://127.0.0.1:8123/api/login -H 'Content-Type: application/json' -d '{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}'); echo -n 'login: '; echo \"\$TOK\" | head -c 40; echo; kill \$SP)"
 
+echo "== 10/10  Live schalten (Routing-.htaccess) =="
+# Routing funktioniert sowohl bei Docroot=erp.wohlbekannt.at (leitet nach public/,
+# sperrt sensible Pfade per RedirectMatch 403) als auch bei Docroot=/public
+# (dann liegt diese Datei oberhalb des Webroots und ist wirkungslos).
+scp -q "$HERE/root-live.htaccess" "$SSH_HOST:$APP_DIR/.htaccess"
+
 echo
-echo "FERTIG (App vorbereitet & verifiziert)."
-echo "Damit es öffentlich live geht, muss der Kunde im KAS-Panel für die Subdomain erp.wohlbekannt.at:"
-echo "  1) das Dokument-Verzeichnis auf  $APP_DIR/public  setzen"
-echo "  2) die PHP-Version auf 8.4 stellen"
-echo "Danach: https://erp.wohlbekannt.at/api/health und der Login prüfen."
+echo "FERTIG & LIVE: $FRONTEND_URL"
+echo "Empfohlen (Hardening durch Kunde): Subdomain-Docroot auf $APP_DIR/public setzen"
+echo "und PHP-Version der Subdomain auf 8.4 — dann sind Code/Secrets schon physisch außerhalb des Webroots."

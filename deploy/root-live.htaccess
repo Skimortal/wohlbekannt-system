@@ -1,0 +1,25 @@
+# Live-Routing im App-Wurzelverzeichnis (erp.wohlbekannt.at/), falls der
+# Subdomain-Docroot NICHT auf /public zeigt: leitet nach public/ und sperrt
+# sensible Pfade. Wenn der Docroot doch auf /public steht, liegt diese Datei
+# oberhalb des Webroots und ist wirkungslos (dann greift public/.htaccess).
+# Sensible Pfade hart sperren (mod_alias, zuverlässig vor dem Rewrite)
+RedirectMatch 403 "(?i)/\.(env|git)"
+RedirectMatch 403 "(?i)^/(config|src|var|vendor|migrations|templates|bin|tests)(/|$)"
+RedirectMatch 403 "(?i)^/(composer\.(json|lock)|symfony\.lock)$"
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Loop-Schutz: bereits in public/
+    RewriteRule ^public/ - [L]
+
+    # /api -> Symfony-Frontcontroller in public/
+    RewriteRule ^api(/.*)?$ public/index.php [QSA,L]
+
+    # Existierende Datei in public/ direkt ausliefern (SPA-Assets, Bilder)
+    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+    RewriteRule ^(.+)$ public/$1 [L]
+
+    # Alles andere -> SPA-Einstieg
+    RewriteRule ^ public/index.html [L]
+</IfModule>
