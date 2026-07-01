@@ -16,3 +16,4 @@ docker-dev/.env
 
 # Deploy secrets (never commit)
 deploy/.deploy.env
+deploy/claude_desktop_config.wohlbekannt.json
