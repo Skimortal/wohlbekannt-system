@@ -33,6 +33,15 @@ fi
 enc() { local s="$1"; s="${s//%/%25}"; s="${s//+/%2B}"; s="${s//@/%40}"; s="${s//:/%3A}"; s="${s//\//%2F}"; s="${s//\?/%3F}"; s="${s//#/%23}"; s="${s//&/%26}"; printf '%s' "$s"; }
 DB_PASS_ENC="$(enc "$DB_PASS")"
 
+# Mailer-DSN aus den (optionalen) SMTP-Variablen bauen. Fehlen sie -> null://null
+# (kein Mailversand, wie bisher). Port 587 = STARTTLS, 465 = implizites TLS.
+if [ -n "${SMTP_HOST:-}" ] && [ -n "${SMTP_USER:-}" ]; then
+  MAILER_DSN="smtp://$(enc "$SMTP_USER"):$(enc "${SMTP_PASS:-}")@${SMTP_HOST}:${SMTP_PORT:-587}"
+else
+  MAILER_DSN="null://null"
+fi
+MAILER_FROM="${MAILER_FROM:-noreply@wohlbekannt.at}"
+
 echo "== 1/9  Verzeichnis absichern (deny-all) + Platzhalter sichern =="
 ssh "$SSH_HOST" "cd '$APP_DIR' && { [ -f index.htm ] && mv -f index.htm index.htm.allinkl-default || true; } && mkdir -p public"
 scp -q "$HERE/root.htaccess" "$SSH_HOST:$APP_DIR/.htaccess"
@@ -56,8 +65,8 @@ APP_DEBUG=0
 APP_SECRET=${APP_SECRET}
 DATABASE_URL="mysql://${DB_USER}:${DB_PASS_ENC}@${DB_HOST}:3306/${DB_NAME}?serverVersion=${DB_SERVER_VERSION}&charset=utf8mb4"
 JWT_PASSPHRASE=${JWT_PASS}
-MAILER_DSN=null://null
-MAILER_FROM=noreply@wohlbekannt.at
+MAILER_DSN=${MAILER_DSN}
+MAILER_FROM=${MAILER_FROM}
 APP_FRONTEND_URL=${FRONTEND_URL}
 ENV
 
