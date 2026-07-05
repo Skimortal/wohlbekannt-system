@@ -40,7 +40,7 @@ class MailerTestCommand extends Command
         $email = (new Email())
             ->from($from)
             ->to($to)
-            ->subject('wohlbekannt-system — SMTP-Test')
+            ->subject('wohlbekannt.at — SMTP-Test')
             ->text(
                 "Dies ist eine automatische Testmail des wohlbekannt-Systems.\n".
                 "Wenn du sie erhältst, funktioniert der SMTP-Versand (z. B. für \"Passwort vergessen\").\n"

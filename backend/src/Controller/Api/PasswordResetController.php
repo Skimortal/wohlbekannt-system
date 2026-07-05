@@ -89,13 +89,13 @@ class PasswordResetController extends ApiController
         $email = (new Email())
             ->from($this->mailerFrom)
             ->to($user->getEmail())
-            ->subject('Passwort zurücksetzen – wohlbekannt')
+            ->subject('Passwort zurücksetzen – wohlbekannt.at')
             ->text(
                 "Hallo {$user->getName()},\n\n".
                 "Sie haben das Zurücksetzen Ihres Passworts angefordert. Über folgenden Link können Sie ein neues Passwort vergeben (gültig für 1 Stunde):\n\n".
                 "{$resetUrl}\n\n".
                 "Falls Sie das nicht waren, können Sie diese E-Mail ignorieren.\n\n".
-                'wohlbekannt'
+                'wohlbekannt.at'
             );
 
         try {

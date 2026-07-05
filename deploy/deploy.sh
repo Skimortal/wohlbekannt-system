@@ -85,7 +85,8 @@ ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console lexik:jwt:generate-keypair --
 echo "== 7/9  DB: Migrations + Seed + Admin =="
 ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console doctrine:migrations:migrate -n"
 ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console app:seed"
-ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console app:create-user '$ADMIN_EMAIL' '$ADMIN_PASS' '$ADMIN_NAME' ROLE_ADMIN"
+# --if-not-exists: bei Re-Deploys NICHT das (evtl. vom Kunden geänderte) Passwort überschreiben.
+ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console app:create-user '$ADMIN_EMAIL' '$ADMIN_PASS' '$ADMIN_NAME' ROLE_ADMIN --if-not-exists"
 
 echo "== 8/9  Cache warmup (prod) =="
 ssh "$SSH_HOST" "cd '$APP_DIR' && $PHP bin/console cache:clear"

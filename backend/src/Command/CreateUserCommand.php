@@ -8,6 +8,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -28,7 +29,8 @@ class CreateUserCommand extends Command
             ->addArgument('email', InputArgument::REQUIRED, 'E-Mail')
             ->addArgument('password', InputArgument::REQUIRED, 'Passwort')
             ->addArgument('name', InputArgument::OPTIONAL, 'Anzeigename', '')
-            ->addArgument('roles', InputArgument::OPTIONAL, 'Rollen (kommagetrennt)', 'ROLE_ADMIN');
+            ->addArgument('roles', InputArgument::OPTIONAL, 'Rollen (kommagetrennt)', 'ROLE_ADMIN')
+            ->addOption('if-not-exists', null, InputOption::VALUE_NONE, 'Nichts tun, wenn der Benutzer schon existiert (kein Passwort-Reset)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -36,7 +38,14 @@ class CreateUserCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $email = $input->getArgument('email');
 
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]) ?? new User();
+        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        if (null !== $existing && $input->getOption('if-not-exists')) {
+            $io->writeln(sprintf('User "%s" existiert bereits — unverändert gelassen.', $email));
+
+            return Command::SUCCESS;
+        }
+
+        $user = $existing ?? new User();
         $user->setEmail($email);
         $user->setName($input->getArgument('name') ?: $email);
         $user->setRoles(array_filter(array_map('trim', explode(',', (string) $input->getArgument('roles')))));

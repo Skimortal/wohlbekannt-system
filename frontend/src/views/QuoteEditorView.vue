@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -7,7 +7,7 @@ import Modal from '../components/Modal.vue'
 import api from '../api'
 import { centsToInput, eur, isoDate, toCents } from '../lib/format'
 import { computeTotals, parseQty, type EditorItem } from '../lib/totals'
-import { openPdf } from '../lib/pdf'
+import { downloadPdf, openPdf } from '../lib/pdf'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,6 +38,51 @@ const form = reactive<any>({
 
 const totals = computed(() => computeTotals(form.items, form.pricesIncludeVat))
 const isDraft = computed(() => form.status === 'draft')
+const pdfName = computed(() => `Angebot ${form.number ?? 'Entwurf'}.pdf`)
+
+// --- Autosave (nur Entwürfe) ---
+const autoState = ref<'idle' | 'saving' | 'saved'>('idle')
+const savedAt = ref<Date | null>(null)
+const savedTime = computed(() =>
+  savedAt.value ? savedAt.value.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }) : ''
+)
+let loaded = false
+let lastSaved = ''
+let timer: ReturnType<typeof setTimeout> | undefined
+
+function snapshot(): string {
+  return JSON.stringify(payload())
+}
+function hasContent(): boolean {
+  return !!form.customerId || form.items.some((it: EditorItem) => (it.title || '').trim().length > 0)
+}
+function markSaved() {
+  lastSaved = snapshot()
+  savedAt.value = new Date()
+  autoState.value = 'saved'
+}
+async function autosave() {
+  if (!isDraft.value || saving.value) return
+  if (!id.value && !hasContent()) return // keine leeren Entwürfe anlegen
+  if (snapshot() === lastSaved) return
+  try {
+    await save() // markiert bei Erfolg den Snapshot (markSaved)
+  } catch {
+    autoState.value = 'idle'
+  }
+}
+watch(
+  () => snapshot(),
+  (cur) => {
+    if (!loaded || !isDraft.value || cur === lastSaved) return
+    autoState.value = 'saving'
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(autosave, 1200)
+  }
+)
+onBeforeUnmount(() => {
+  if (timer) clearTimeout(timer)
+})
 
 function newItem(optional = false): EditorItem {
   return { optional, title: '', description: '', quantity: '1', unit: 'Stk', priceInput: '0,00', vatRate: form.defaultVatRate || '20.00', taxCategory: 'standard' }
@@ -103,6 +148,7 @@ async function save(): Promise<boolean> {
       apply(data)
       router.replace(`/angebote/${data.id}`)
     }
+    markSaved()
     return true
   } finally {
     saving.value = false
@@ -179,6 +225,8 @@ onMounted(async () => {
     const { data } = await api.get(`/api/quotes/${route.params.id}`)
     apply(data)
   }
+  lastSaved = snapshot()
+  loaded = true
 })
 </script>
 
@@ -191,8 +239,13 @@ onMounted(async () => {
         <h1 class="text-2xl font-semibold tracking-tight text-ink">{{ form.number ? `Angebot ${form.number}` : 'Neues Angebot' }}</h1>
         <StatusBadge :status="form.status" kind="quote" />
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <span v-if="isDraft && autoState !== 'idle'" class="mr-1 text-xs text-ink-soft">
+          <template v-if="autoState === 'saving'">Speichert …</template>
+          <template v-else>Gespeichert {{ savedTime }}</template>
+        </span>
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/quotes/${id}/pdf`)">PDF öffnen</button>
+        <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/quotes/${id}/pdf`, pdfName)">Herunterladen</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="send">Versenden</button>
         <button v-if="form.status === 'sent'" class="btn-accent" @click="decide('accept')">Annehmen</button>

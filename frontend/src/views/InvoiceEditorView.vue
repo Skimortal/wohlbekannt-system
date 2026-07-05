@@ -7,7 +7,7 @@ import Modal from '../components/Modal.vue'
 import api from '../api'
 import { centsToInput, eur, formatDate, isoDate, toCents } from '../lib/format'
 import { computeTotals, parseQty, type EditorItem } from '../lib/totals'
-import { openPdf } from '../lib/pdf'
+import { downloadPdf, openPdf } from '../lib/pdf'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,6 +31,7 @@ const form = reactive<any>({
 const totals = computed(() => computeTotals(form.items, form.pricesIncludeVat))
 const isDraft = computed(() => form.status === 'draft')
 const TYPE_LABEL: Record<string, string> = { invoice: 'Rechnung', credit_note: 'Gutschrift', cancellation: 'Storno' }
+const pdfName = computed(() => `${TYPE_LABEL[form.type] ?? 'Rechnung'} ${form.number ?? 'Entwurf'}.pdf`)
 
 function addItem() {
   form.items.push({ optional: false, title: '', description: '', quantity: '1', unit: 'Stk', priceInput: '0,00', vatRate: form.defaultVatRate, taxCategory: 'standard' })
@@ -133,6 +134,7 @@ onMounted(async () => {
       </div>
       <div class="flex flex-wrap gap-2">
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/invoices/${id}/pdf`)">PDF öffnen</button>
+        <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/invoices/${id}/pdf`, pdfName)">Herunterladen</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="finalize">Festschreiben</button>
         <button v-if="!isDraft && form.status !== 'cancelled' && form.type === 'invoice'" class="btn-accent" @click="showPay = true">Zahlung erfassen</button>
