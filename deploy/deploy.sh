@@ -57,8 +57,14 @@ rsync -az "$ROOT/frontend/dist/" "$SSH_HOST:$APP_DIR/public/"
 scp -q "$HERE/public.htaccess" "$SSH_HOST:$APP_DIR/public/.htaccess"
 
 echo "== 4/9  .env.local (prod) schreiben =="
-APP_SECRET="$(ssh "$SSH_HOST" "$PHP -r 'echo bin2hex(random_bytes(16));'")"
-JWT_PASS="$(ssh "$SSH_HOST" "$PHP -r 'echo bin2hex(random_bytes(16));'")"
+# APP_SECRET und JWT_PASSPHRASE bei Re-Deploys ERHALTEN: eine neue Passphrase
+# würde nicht mehr zum bestehenden (via --skip-if-exists beibehaltenen) JWT-Key
+# passen -> Login-500. Nur beim Erst-Deploy neu erzeugen.
+keep_or_gen() { # $1 = Variablenname in .env.local
+  ssh "$SSH_HOST" "cd '$APP_DIR' && v=\$(grep -m1 '^$1=' .env.local 2>/dev/null | cut -d= -f2-); if [ -n \"\$v\" ]; then printf '%s' \"\$v\"; else $PHP -r 'echo bin2hex(random_bytes(16));'; fi"
+}
+APP_SECRET="$(keep_or_gen APP_SECRET)"
+JWT_PASS="$(keep_or_gen JWT_PASSPHRASE)"
 ssh "$SSH_HOST" "cat > '$APP_DIR/.env.local'" <<ENV
 APP_ENV=prod
 APP_DEBUG=0
