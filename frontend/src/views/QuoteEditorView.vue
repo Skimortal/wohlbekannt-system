@@ -178,6 +178,12 @@ async function send() {
   const { data } = await api.post(`/api/quotes/${id.value}/send`)
   apply(data)
 }
+async function duplicate() {
+  // Entwürfe vor dem Kopieren noch sichern, damit die Kopie den letzten Stand hat.
+  if (isDraft.value) await save()
+  const { data } = await api.post(`/api/quotes/${id.value}/duplicate`)
+  router.push(`/angebote/${data.id}`) // App.vue keyt nach Pfad -> Editor mountet frisch
+}
 async function decide(action: 'accept' | 'decline') {
   const { data } = await api.post(`/api/quotes/${id.value}/${action}`)
   apply(data)
@@ -275,6 +281,7 @@ onMounted(async () => {
         </span>
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/quotes/${id}/pdf`)">PDF öffnen</button>
         <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/quotes/${id}/pdf`, pdfName)">Herunterladen</button>
+        <button v-if="id" class="btn-secondary" :disabled="saving" title="Als neuen Entwurf kopieren" @click="duplicate">Duplizieren</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save()">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="send">Versenden</button>
         <button v-if="form.status === 'sent'" class="btn-accent" @click="decide('accept')">Annehmen</button>

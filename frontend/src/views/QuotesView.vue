@@ -37,6 +37,10 @@ function goPage(p: number) {
   page.value = p
   load()
 }
+async function duplicate(id: number) {
+  const { data } = await api.post(`/api/quotes/${id}/duplicate`)
+  router.push(`/angebote/${data.id}`)
+}
 onMounted(load)
 </script>
 
@@ -60,7 +64,7 @@ onMounted(load)
       <div class="table-wrap">
         <table class="w-full">
           <thead class="border-b border-line bg-sand-50/60">
-            <tr><th class="th">Nr.</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Betrag brutto</th></tr>
+            <tr><th class="th">Nr.</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Betrag brutto</th><th class="th"></th></tr>
           </thead>
           <tbody>
             <tr v-for="q in quotes" :key="q.id" class="cursor-pointer border-b border-line last:border-0 hover:bg-sand-50/40" @click="router.push(`/angebote/${q.id}`)">
@@ -69,8 +73,9 @@ onMounted(load)
               <td class="td text-ink-soft">{{ formatDate(q.issueDate) }}</td>
               <td class="td"><StatusBadge :status="q.status" kind="quote" /></td>
               <td class="td text-right tabular-nums">{{ eur(q.totalGross, q.currency) }}</td>
+              <td class="td text-right"><button class="btn-ghost px-2 py-1 text-xs" title="Als neuen Entwurf kopieren" @click.stop="duplicate(q.id)">Kopieren</button></td>
             </tr>
-            <tr v-if="!quotes.length"><td class="td text-ink-soft" colspan="5">Keine Angebote gefunden.</td></tr>
+            <tr v-if="!quotes.length"><td class="td text-ink-soft" colspan="6">Keine Angebote gefunden.</td></tr>
           </tbody>
         </table>
       </div>

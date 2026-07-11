@@ -96,6 +96,58 @@ class QuoteController extends ApiController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
+    #[Route('/{id}/duplicate', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function duplicate(Quote $quote): JsonResponse
+    {
+        $copy = new Quote();
+
+        // Kopf + Empfänger-Snapshot übernehmen.
+        $copy->setCustomer($quote->getCustomer());
+        $copy->setRecipientName($quote->getRecipientName());
+        $copy->setRecipientContact($quote->getRecipientContact());
+        $copy->setRecipientCustomerNumber($quote->getRecipientCustomerNumber());
+        $copy->setRecipientVatId($quote->getRecipientVatId());
+        $copy->setRecipientAddress(clone $quote->getRecipientAddress());
+        $copy->setContactPerson($quote->getContactPerson());
+        $copy->setCurrency($quote->getCurrency());
+        $copy->setPricesIncludeVat($quote->isPricesIncludeVat());
+        $copy->setIntroText($quote->getIntroText());
+        $copy->setOutroText($quote->getOutroText());
+        $copy->setInternalNotes($quote->getInternalNotes());
+
+        // Frisch: Entwurf ohne Nummer, heutiges Datum, neue Gültigkeit.
+        $copy->setStatus(QuoteStatus::DRAFT);
+        $copy->setNumber(null);
+        $copy->setIssueDate(new \DateTimeImmutable());
+        $settings = $this->settingsRepo->findOneBy([]);
+        $copy->setValidUntil(
+            $settings instanceof CompanySettings
+                ? (new \DateTimeImmutable())->modify(sprintf('+%d days', $settings->getDefaultQuoteValidityDays()))
+                : $quote->getValidUntil()
+        );
+
+        // Positionen kopieren (inkl. optionale).
+        foreach ($quote->getItems() as $src) {
+            $item = new QuoteItem();
+            $item->setPosition($src->getPosition());
+            $item->setOptional($src->isOptional());
+            $item->setTitle($src->getTitle());
+            $item->setDescription($src->getDescription());
+            $item->setQuantity($src->getQuantity());
+            $item->setUnit($src->getUnit());
+            $item->setUnitPrice($src->getUnitPrice());
+            $item->setVatRate($src->getVatRate());
+            $item->setTaxCategory($src->getTaxCategory());
+            $copy->addItem($item);
+        }
+
+        $this->totals->recompute($copy, $copy->getItems());
+        $this->em->persist($copy);
+        $this->em->flush();
+
+        return $this->json($this->presenter->quote($copy), JsonResponse::HTTP_CREATED);
+    }
+
     #[Route('/{id}/send', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function send(Quote $quote): JsonResponse
     {
