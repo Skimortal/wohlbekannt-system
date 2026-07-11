@@ -38,6 +38,10 @@ const form = reactive<any>({
 
 const totals = computed(() => computeTotals(form.items, form.pricesIncludeVat))
 const isDraft = computed(() => form.status === 'draft')
+// Entwürfe UND versendete Angebote sind bearbeitbar (kleine Nachkorrekturen);
+// angenommene/abgelehnte bleiben gesperrt. Versendete speichern manuell (kein Autosave).
+const editable = computed(() => form.status === 'draft' || form.status === 'sent')
+const dirty = ref(false)
 const pdfName = computed(() => `Angebot ${form.number ?? 'Entwurf'}.pdf`)
 
 // --- Autosave (nur Entwürfe) ---
@@ -60,6 +64,7 @@ function markSaved() {
   lastSaved = snapshot()
   savedAt.value = new Date()
   autoState.value = 'saved'
+  dirty.value = false
 }
 async function autosave() {
   if (!isDraft.value) return
@@ -80,7 +85,9 @@ async function autosave() {
 watch(
   () => snapshot(),
   (cur) => {
-    if (!loaded || !isDraft.value || cur === lastSaved) return
+    if (!loaded) return
+    dirty.value = cur !== lastSaved
+    if (!isDraft.value || cur === lastSaved) return // Autosave nur für Entwürfe
     autoState.value = 'saving'
     if (timer) clearTimeout(timer)
     timer = setTimeout(autosave, 1500)
@@ -163,6 +170,7 @@ async function save(opts: { silent?: boolean } = {}): Promise<boolean> {
       lastSaved = sent
       savedAt.value = new Date()
       autoState.value = 'saved'
+      dirty.value = snapshot() !== lastSaved
     } else {
       apply(data)
       markSaved()
@@ -179,8 +187,8 @@ async function send() {
   apply(data)
 }
 async function duplicate() {
-  // Entwürfe vor dem Kopieren noch sichern, damit die Kopie den letzten Stand hat.
-  if (isDraft.value) await save()
+  // Offene Änderungen vor dem Kopieren sichern, damit die Kopie den letzten Stand hat.
+  if (dirty.value) await save()
   const { data } = await api.post(`/api/quotes/${id.value}/duplicate`)
   router.push(`/angebote/${data.id}`) // App.vue keyt nach Pfad -> Editor mountet frisch
 }
@@ -279,11 +287,13 @@ onMounted(async () => {
           <template v-if="autoState === 'saving'">Speichert …</template>
           <template v-else>Gespeichert {{ savedTime }}</template>
         </span>
+        <span v-if="form.status === 'sent' && dirty" class="mr-1 text-xs text-[#8a5a2e]">• nicht gespeichert</span>
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/quotes/${id}/pdf`)">PDF öffnen</button>
         <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/quotes/${id}/pdf`, pdfName)">Herunterladen</button>
         <button v-if="id" class="btn-secondary" :disabled="saving" title="Als neuen Entwurf kopieren" @click="duplicate">Duplizieren</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save()">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="send">Versenden</button>
+        <button v-if="form.status === 'sent'" class="btn-primary" :disabled="saving || !dirty" @click="save()">Änderungen speichern</button>
         <button v-if="form.status === 'sent'" class="btn-accent" @click="decide('accept')">Annehmen</button>
         <button v-if="form.status === 'sent'" class="btn-ghost text-red-600" @click="decide('decline')">Ablehnen</button>
         <button v-if="form.status === 'accepted'" class="btn-primary" @click="createInvoice">Rechnung erstellen</button>
@@ -295,22 +305,22 @@ onMounted(async () => {
       <div class="card space-y-4 p-6 lg:col-span-1">
         <div>
           <label class="label">Kunde</label>
-          <select v-model="form.customerId" class="input" :disabled="!isDraft" @change="onCustomerChange">
+          <select v-model="form.customerId" class="input" :disabled="!editable" @change="onCustomerChange">
             <option :value="null">— manuell —</option>
             <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.displayName }} ({{ c.customerNumber }})</option>
           </select>
         </div>
-        <div><label class="label">Empfänger</label><input v-model="form.recipientName" class="input" :disabled="!isDraft" /></div>
-        <div><label class="label">Ansprechpartner</label><input v-model="form.contactPerson" class="input" :disabled="!isDraft" /></div>
+        <div><label class="label">Empfänger</label><input v-model="form.recipientName" class="input" :disabled="!editable" /></div>
+        <div><label class="label">Ansprechpartner</label><input v-model="form.contactPerson" class="input" :disabled="!editable" /></div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="label">Datum</label><input v-model="form.issueDate" type="date" class="input" :disabled="!isDraft" /></div>
-          <div><label class="label">Gültig bis</label><input v-model="form.validUntil" type="date" class="input" :disabled="!isDraft" /></div>
+          <div><label class="label">Datum</label><input v-model="form.issueDate" type="date" class="input" :disabled="!editable" /></div>
+          <div><label class="label">Gültig bis</label><input v-model="form.validUntil" type="date" class="input" :disabled="!editable" /></div>
         </div>
         <label class="flex items-center gap-2 text-sm text-ink">
-          <input v-model="form.pricesIncludeVat" type="checkbox" :disabled="!isDraft" /> Preise inkl. USt (brutto)
+          <input v-model="form.pricesIncludeVat" type="checkbox" :disabled="!editable" /> Preise inkl. USt (brutto)
         </label>
-        <div><label class="label">Einleitungstext</label><textarea v-model="form.introText" rows="3" class="input" :disabled="!isDraft"></textarea></div>
-        <div><label class="label">Schlusstext</label><textarea v-model="form.outroText" rows="3" class="input" :disabled="!isDraft"></textarea></div>
+        <div><label class="label">Einleitungstext</label><textarea v-model="form.introText" rows="3" class="input" :disabled="!editable"></textarea></div>
+        <div><label class="label">Schlusstext</label><textarea v-model="form.outroText" rows="3" class="input" :disabled="!editable"></textarea></div>
       </div>
 
       <!-- right: positions + totals -->
@@ -318,7 +328,7 @@ onMounted(async () => {
         <div class="card p-6">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-base font-semibold text-ink">Positionen</h2>
-            <div v-if="isDraft" class="flex flex-wrap items-center gap-2">
+            <div v-if="editable" class="flex flex-wrap items-center gap-2">
               <select class="input !w-auto py-1.5 text-sm" @change="addFromArticle">
                 <option value="">+ aus Katalog …</option>
                 <option v-for="a in articles" :key="a.id" :value="a.id">{{ a.name }}</option>
@@ -332,21 +342,21 @@ onMounted(async () => {
             <div class="mb-2 flex items-center gap-2">
               <span v-if="it.optional" class="rounded border border-sand bg-sand-100 px-1.5 py-0.5 text-[10px] font-semibold text-[#8a5a2e]">Opt.</span>
               <span v-else class="text-xs text-ink-soft">Pos. {{ i + 1 }}</span>
-              <input v-model="it.title" class="input flex-1" placeholder="Bezeichnung" :disabled="!isDraft" />
-              <template v-if="isDraft">
+              <input v-model="it.title" class="input flex-1" placeholder="Bezeichnung" :disabled="!editable" />
+              <template v-if="editable">
                 <button class="btn-ghost px-2" title="hoch" @click="move(i, -1)">↑</button>
                 <button class="btn-ghost px-2" title="runter" @click="move(i, 1)">↓</button>
                 <button class="btn-ghost px-2 text-red-600" @click="removeItem(i)">✕</button>
               </template>
             </div>
-            <textarea v-model="it.description" rows="2" class="input mb-2 text-sm" placeholder="Beschreibung (optional)" :disabled="!isDraft"></textarea>
+            <textarea v-model="it.description" rows="2" class="input mb-2 text-sm" placeholder="Beschreibung (optional)" :disabled="!editable"></textarea>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div><label class="label !text-xs">Menge</label><input v-model="it.quantity" class="input text-right tabular-nums" :disabled="!isDraft" /></div>
-              <div><label class="label !text-xs">Einheit</label><input v-model="it.unit" class="input" :disabled="!isDraft" /></div>
-              <div><label class="label !text-xs">EP ({{ form.pricesIncludeVat ? 'brutto' : 'netto' }})</label><input v-model="it.priceInput" class="input text-right tabular-nums" :disabled="!isDraft" /></div>
-              <div><label class="label !text-xs">USt %</label><input v-model="it.vatRate" class="input text-right" :disabled="!isDraft" /></div>
+              <div><label class="label !text-xs">Menge</label><input v-model="it.quantity" class="input text-right tabular-nums" :disabled="!editable" /></div>
+              <div><label class="label !text-xs">Einheit</label><input v-model="it.unit" class="input" :disabled="!editable" /></div>
+              <div><label class="label !text-xs">EP ({{ form.pricesIncludeVat ? 'brutto' : 'netto' }})</label><input v-model="it.priceInput" class="input text-right tabular-nums" :disabled="!editable" /></div>
+              <div><label class="label !text-xs">USt %</label><input v-model="it.vatRate" class="input text-right" :disabled="!editable" /></div>
             </div>
-            <label v-if="isDraft" class="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
+            <label v-if="editable" class="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
               <input v-model="it.optional" type="checkbox" /> optionale Position
             </label>
           </div>
