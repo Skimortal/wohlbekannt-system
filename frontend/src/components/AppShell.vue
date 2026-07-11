@@ -3,11 +3,18 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../api'
 import { useAuthStore } from '../stores/auth'
+import { useIdleLogout } from '../lib/idle'
 
 const auth = useAuthStore()
 const router = useRouter()
 const isAdmin = ref(false)
 const drawerOpen = ref(false)
+
+// Nach 10 min Inaktivität automatisch abmelden (aktives Arbeiten setzt die Uhr zurück).
+useIdleLogout(10 * 60 * 1000, () => {
+  auth.logout()
+  router.push({ name: 'login' })
+})
 
 onMounted(async () => {
   try {

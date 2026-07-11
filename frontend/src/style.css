@@ -37,6 +37,16 @@ body {
   min-height: 100svh;
 }
 
+@layer base {
+  /* Tailwind v4 setzt Buttons auf cursor:default — für klickbare Elemente
+     wieder den Zeigefinger, außer wenn deaktiviert. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href] {
+    cursor: pointer;
+  }
+}
+
 @layer components {
   .input {
     @apply w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none transition focus:border-sand;

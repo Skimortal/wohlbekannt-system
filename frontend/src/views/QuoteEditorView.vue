@@ -62,11 +62,17 @@ function markSaved() {
   autoState.value = 'saved'
 }
 async function autosave() {
-  if (!isDraft.value || saving.value) return
+  if (!isDraft.value) return
   if (!id.value && !hasContent()) return // keine leeren Entwürfe anlegen
+  if (saving.value) {
+    // Es läuft noch ein Speichervorgang — später erneut versuchen, statt zu verwerfen.
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(autosave, 1500)
+    return
+  }
   if (snapshot() === lastSaved) return
   try {
-    await save() // markiert bei Erfolg den Snapshot (markSaved)
+    await save({ silent: true }) // silent: überschreibt die getippten Felder NICHT
   } catch {
     autoState.value = 'idle'
   }
@@ -77,7 +83,7 @@ watch(
     if (!loaded || !isDraft.value || cur === lastSaved) return
     autoState.value = 'saving'
     if (timer) clearTimeout(timer)
-    timer = setTimeout(autosave, 1200)
+    timer = setTimeout(autosave, 1500)
   }
 )
 onBeforeUnmount(() => {
@@ -136,19 +142,31 @@ function payload() {
   }
 }
 
-async function save(): Promise<boolean> {
+async function save(opts: { silent?: boolean } = {}): Promise<boolean> {
   saving.value = true
+  const sent = snapshot() // exakt das, was wir gerade persistieren
   try {
+    let data: any
     if (id.value) {
-      const { data } = await api.put(`/api/quotes/${id.value}`, payload())
-      apply(data)
+      data = (await api.put(`/api/quotes/${id.value}`, payload())).data
     } else {
-      const { data } = await api.post('/api/quotes', payload())
+      data = (await api.post('/api/quotes', payload())).data
       id.value = data.id
-      apply(data)
       router.replace(`/angebote/${data.id}`)
     }
-    markSaved()
+    if (opts.silent) {
+      // Autosave: nur Metadaten übernehmen, damit während des Roundtrips
+      // getippte Zeichen im Formular erhalten bleiben. lastSaved = das
+      // Gesendete — tippt der Kunde weiter, erkennt der Watcher die Differenz
+      // und speichert im nächsten Durchgang nach.
+      applyMeta(data)
+      lastSaved = sent
+      savedAt.value = new Date()
+      autoState.value = 'saved'
+    } else {
+      apply(data)
+      markSaved()
+    }
     return true
   } finally {
     saving.value = false
@@ -180,6 +198,17 @@ function confirmCreateInvoice() {
   const ids = optionalItems.value.filter((it) => selectedOptional[it.id]).map((it) => it.id)
   showInvoiceModal.value = false
   doCreateInvoice(ids)
+}
+
+/** Nur Server-Metadaten übernehmen (keine getippten Felder) — für Autosave. */
+function applyMeta(q: any) {
+  id.value = q.id
+  form.status = q.status
+  form.number = q.number
+  form.currency = q.currency
+  optionalItems.value = (q.items || [])
+    .filter((it: any) => it.optional)
+    .map((it: any) => ({ id: it.id, title: it.title, lineGross: it.lineGross }))
 }
 
 function apply(q: any) {
@@ -246,7 +275,7 @@ onMounted(async () => {
         </span>
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/quotes/${id}/pdf`)">PDF öffnen</button>
         <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/quotes/${id}/pdf`, pdfName)">Herunterladen</button>
-        <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save">Entwurf speichern</button>
+        <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save()">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="send">Versenden</button>
         <button v-if="form.status === 'sent'" class="btn-accent" @click="decide('accept')">Annehmen</button>
         <button v-if="form.status === 'sent'" class="btn-ghost text-red-600" @click="decide('decline')">Ablehnen</button>
