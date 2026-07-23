@@ -142,7 +142,7 @@ onMounted(load)
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Benutzer bearbeiten' : 'Neuer Benutzer'" @close="showModal = false">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div><label class="label">Name</label><input v-model="form.name" class="input" /></div>
         <div><label class="label">E-Mail</label><input v-model="form.email" type="email" class="input" /></div>
         <div>

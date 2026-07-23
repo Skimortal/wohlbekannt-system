@@ -126,7 +126,7 @@ onMounted(load)
     <Pagination :page="page" :limit="limit" :total="total" @go="goPage" />
 
     <Modal v-if="showModal" :title="form.id ? 'Kunde bearbeiten' : 'Neuer Kunde'" @close="showModal = false">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label class="label">Typ</label>
           <select v-model="form.type" class="input">
@@ -162,7 +162,7 @@ onMounted(load)
           <label class="label">Telefon</label>
           <input v-model="form.phone" class="input" />
         </div>
-        <div class="col-span-2">
+        <div class="sm:col-span-2">
           <label class="label">Straße</label>
           <input v-model="form.address.street" class="input" />
         </div>

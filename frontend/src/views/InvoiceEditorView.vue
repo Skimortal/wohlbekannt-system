@@ -127,7 +127,7 @@ onMounted(async () => {
   <AppShell>
     <template #breadcrumb>Rechnungen / {{ form.number ?? 'Neu' }}</template>
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-semibold tracking-tight text-ink">{{ form.number ? `${TYPE_LABEL[form.type]} ${form.number}` : 'Neue Rechnung' }}</h1>
         <StatusBadge :status="form.status" kind="invoice" />
@@ -175,7 +175,7 @@ onMounted(async () => {
 
       <div class="space-y-6 lg:col-span-2">
         <div class="card p-6">
-          <div class="mb-3 flex items-center justify-between">
+          <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-base font-semibold text-ink">Positionen</h2>
             <div v-if="isDraft" class="flex flex-wrap items-center gap-2">
               <select class="input !w-auto py-1.5 text-sm" @change="addFromArticle">
@@ -216,7 +216,7 @@ onMounted(async () => {
     </div>
 
     <Modal v-if="showPay" title="Zahlung erfassen" @close="showPay = false">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div><label class="label">Betrag (EUR)</label><input v-model="pay.amount" class="input text-right tabular-nums" /></div>
         <div><label class="label">Datum</label><input v-model="pay.paidAt" type="date" class="input" /></div>
         <div><label class="label">Methode</label><input v-model="pay.method" class="input" /></div>

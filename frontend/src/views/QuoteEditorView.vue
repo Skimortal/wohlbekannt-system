@@ -284,7 +284,7 @@ onMounted(async () => {
   <AppShell>
     <template #breadcrumb>Angebote / {{ form.number ?? 'Neu' }}</template>
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-semibold tracking-tight text-ink">{{ form.number ? `Angebot ${form.number}` : 'Neues Angebot' }}</h1>
         <StatusBadge :status="form.status" kind="quote" />
@@ -334,7 +334,7 @@ onMounted(async () => {
       <!-- right: positions + totals -->
       <div class="space-y-6 lg:col-span-2">
         <div class="card p-6">
-          <div class="mb-3 flex items-center justify-between">
+          <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-base font-semibold text-ink">Positionen</h2>
             <div v-if="editable" class="flex flex-wrap items-center gap-2">
               <select class="input !w-auto py-1.5 text-sm" @change="addFromArticle">

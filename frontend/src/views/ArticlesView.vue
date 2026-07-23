@@ -104,9 +104,9 @@ onMounted(load)
     </div>
 
     <Modal v-if="showModal" :title="form.id ? 'Artikel bearbeiten' : 'Neuer Artikel'" @close="showModal = false">
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2"><label class="label">Bezeichnung</label><input v-model="form.name" class="input" /></div>
-        <div class="col-span-2"><label class="label">Beschreibung</label><textarea v-model="form.description" rows="3" class="input"></textarea></div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2"><label class="label">Bezeichnung</label><input v-model="form.name" class="input" /></div>
+        <div class="sm:col-span-2"><label class="label">Beschreibung</label><textarea v-model="form.description" rows="3" class="input"></textarea></div>
         <div><label class="label">Kategorie</label><input v-model="form.category" class="input" /></div>
         <div><label class="label">Einheit</label><input v-model="form.unit" class="input" placeholder="Stk / Personen / pauschal" /></div>
         <div><label class="label">Preis brutto (EUR)</label><input v-model="priceInput" class="input text-right tabular-nums" /></div>
