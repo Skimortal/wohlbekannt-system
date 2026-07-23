@@ -41,6 +41,11 @@ async function duplicate(id: number) {
   const { data } = await api.post(`/api/quotes/${id}/duplicate`)
   router.push(`/angebote/${data.id}`)
 }
+async function remove(id: number) {
+  if (!confirm('Diesen Entwurf wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return
+  await api.delete(`/api/quotes/${id}`)
+  load()
+}
 onMounted(load)
 </script>
 
@@ -73,7 +78,10 @@ onMounted(load)
               <td class="td text-ink-soft">{{ formatDate(q.issueDate) }}</td>
               <td class="td"><StatusBadge :status="q.status" kind="quote" /></td>
               <td class="td text-right tabular-nums">{{ eur(q.totalGross, q.currency) }}</td>
-              <td class="td text-right"><button class="btn-ghost px-2 py-1 text-xs" title="Als neuen Entwurf kopieren" @click.stop="duplicate(q.id)">Kopieren</button></td>
+              <td class="td text-right">
+                <button class="btn-ghost px-2 py-1 text-xs" title="Als neuen Entwurf kopieren" @click.stop="duplicate(q.id)">Kopieren</button>
+                <button v-if="q.status === 'draft'" class="btn-ghost px-2 py-1 text-xs text-red-600" title="Entwurf löschen" @click.stop="remove(q.id)">Löschen</button>
+              </td>
             </tr>
             <tr v-if="!quotes.length"><td class="td text-ink-soft" colspan="6">Keine Angebote gefunden.</td></tr>
           </tbody>

@@ -192,6 +192,13 @@ async function duplicate() {
   const { data } = await api.post(`/api/quotes/${id.value}/duplicate`)
   router.push(`/angebote/${data.id}`) // App.vue keyt nach Pfad -> Editor mountet frisch
 }
+async function remove() {
+  if (!id.value) return
+  if (!confirm('Diesen Entwurf wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return
+  if (timer) clearTimeout(timer) // laufenden Autosave stoppen, damit er den Entwurf nicht neu anlegt
+  await api.delete(`/api/quotes/${id.value}`)
+  router.push('/angebote')
+}
 async function decide(action: 'accept' | 'decline') {
   const { data } = await api.post(`/api/quotes/${id.value}/${action}`)
   apply(data)
@@ -293,6 +300,7 @@ onMounted(async () => {
         <button v-if="id" class="btn-secondary" :disabled="saving" title="Als neuen Entwurf kopieren" @click="duplicate">Duplizieren</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save()">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="send">Versenden</button>
+        <button v-if="isDraft && id" class="btn-ghost text-red-600" :disabled="saving" @click="remove">Löschen</button>
         <button v-if="form.status === 'sent'" class="btn-primary" :disabled="saving || !dirty" @click="save()">Änderungen speichern</button>
         <button v-if="form.status === 'sent'" class="btn-accent" @click="decide('accept')">Annehmen</button>
         <button v-if="form.status === 'sent'" class="btn-ghost text-red-600" @click="decide('decline')">Ablehnen</button>
