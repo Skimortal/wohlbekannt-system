@@ -146,6 +146,50 @@ class InvoiceController extends ApiController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
+    #[Route('/{id}/duplicate', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function duplicate(Invoice $invoice): JsonResponse
+    {
+        $copy = new Invoice();
+
+        // Copy header + recipient snapshot. Keep the type (regular case: invoice).
+        $copy->setType($invoice->getType());
+        $copy->setCustomer($invoice->getCustomer());
+        $copy->setRecipientName($invoice->getRecipientName());
+        $copy->setRecipientContact($invoice->getRecipientContact());
+        $copy->setRecipientCustomerNumber($invoice->getRecipientCustomerNumber());
+        $copy->setRecipientVatId($invoice->getRecipientVatId());
+        $copy->setRecipientAddress(clone $invoice->getRecipientAddress());
+        $copy->setContactPerson($invoice->getContactPerson());
+        $copy->setCurrency($invoice->getCurrency());
+        $copy->setPricesIncludeVat($invoice->isPricesIncludeVat());
+        $copy->setIntroText($invoice->getIntroText());
+        $copy->setOutroText($invoice->getOutroText());
+        $copy->setInternalNotes($invoice->getInternalNotes());
+        $copy->setServicePeriodStart($invoice->getServicePeriodStart());
+        $copy->setServicePeriodEnd($invoice->getServicePeriodEnd());
+
+        // Fresh: draft without number, today's date, new due date.
+        $copy->setStatus(InvoiceStatus::DRAFT);
+        $copy->setNumber(null);
+        $copy->setIssueDate(new \DateTimeImmutable());
+        $settings = $this->settingsRepo->findOneBy([]);
+        $days = $settings?->getDefaultPaymentTermsDays() ?? 14;
+        $copy->setDueDate((new \DateTimeImmutable())->modify(sprintf('+%d days', $days)));
+
+        // Copy line items (including optional ones).
+        foreach ($invoice->getItems() as $src) {
+            $item = new InvoiceItem();
+            $this->copyLine($src, $item);
+            $copy->addItem($item);
+        }
+
+        $this->totals->recompute($copy, $copy->getItems());
+        $this->em->persist($copy);
+        $this->em->flush();
+
+        return $this->json($this->presenter->invoice($copy), JsonResponse::HTTP_CREATED);
+    }
+
     #[Route('/{id}/finalize', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function finalize(Invoice $invoice): JsonResponse
     {

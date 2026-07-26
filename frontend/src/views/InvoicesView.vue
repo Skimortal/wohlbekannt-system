@@ -46,6 +46,15 @@ function goPage(p: number) {
   page.value = p
   load()
 }
+async function duplicate(id: number) {
+  const { data } = await api.post(`/api/invoices/${id}/duplicate`)
+  router.push(`/rechnungen/${data.id}`)
+}
+async function remove(id: number) {
+  if (!confirm('Diesen Entwurf wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return
+  await api.delete(`/api/invoices/${id}`)
+  load()
+}
 onMounted(load)
 </script>
 
@@ -72,7 +81,7 @@ onMounted(load)
       <div class="table-wrap">
         <table class="w-full">
           <thead class="border-b border-line bg-sand-50/60">
-            <tr><th class="th">Nr.</th><th class="th">Typ</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Brutto</th><th class="th text-right">Offen</th></tr>
+            <tr><th class="th">Nr.</th><th class="th">Typ</th><th class="th">Kunde</th><th class="th">Datum</th><th class="th">Status</th><th class="th text-right">Brutto</th><th class="th text-right">Offen</th><th class="th"></th></tr>
           </thead>
           <tbody>
             <tr v-for="i in invoices" :key="i.id" class="cursor-pointer border-b border-line last:border-0 hover:bg-sand-50/40" @click="router.push(`/rechnungen/${i.id}`)">
@@ -83,8 +92,12 @@ onMounted(load)
               <td class="td"><StatusBadge :status="i.status" kind="invoice" /></td>
               <td class="td text-right tabular-nums">{{ eur(i.totalGross, i.currency) }}</td>
               <td class="td text-right tabular-nums">{{ i.openAmount > 0 ? eur(i.openAmount, i.currency) : '—' }}</td>
+              <td class="td text-right whitespace-nowrap">
+                <button class="btn-ghost px-2 py-1 text-xs" title="Als neuen Entwurf kopieren" @click.stop="duplicate(i.id)">Kopieren</button>
+                <button v-if="i.status === 'draft'" class="btn-ghost px-2 py-1 text-xs text-red-600" title="Entwurf löschen" @click.stop="remove(i.id)">Löschen</button>
+              </td>
             </tr>
-            <tr v-if="!invoices.length"><td class="td text-ink-soft" colspan="7">Keine Rechnungen gefunden.</td></tr>
+            <tr v-if="!invoices.length"><td class="td text-ink-soft" colspan="8">Keine Rechnungen gefunden.</td></tr>
           </tbody>
         </table>
       </div>

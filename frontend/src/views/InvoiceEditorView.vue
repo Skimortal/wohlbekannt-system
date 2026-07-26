@@ -87,6 +87,17 @@ async function creditNote() {
   if (!confirm('Gutschrift zu dieser Rechnung erstellen?')) return
   const { data } = await api.post(`/api/invoices/${id.value}/credit-note`); router.push(`/rechnungen/${data.id}`)
 }
+async function duplicate() {
+  if (!id.value) return
+  const { data } = await api.post(`/api/invoices/${id.value}/duplicate`)
+  router.push(`/rechnungen/${data.id}`)
+}
+async function remove() {
+  if (!id.value) return
+  if (!confirm('Diesen Entwurf wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return
+  await api.delete(`/api/invoices/${id.value}`)
+  router.push('/rechnungen')
+}
 
 function apply(inv: any) {
   id.value = inv.id
@@ -135,11 +146,13 @@ onMounted(async () => {
       <div class="flex flex-wrap gap-2">
         <button v-if="id" class="btn-secondary" @click="openPdf(`/api/invoices/${id}/pdf`)">PDF öffnen</button>
         <button v-if="id" class="btn-secondary" @click="downloadPdf(`/api/invoices/${id}/pdf`, pdfName)">Herunterladen</button>
+        <button v-if="id" class="btn-secondary" title="Als neuen Entwurf kopieren" @click="duplicate">Duplizieren</button>
         <button v-if="isDraft" class="btn-secondary" :disabled="saving" @click="save">Entwurf speichern</button>
         <button v-if="isDraft" class="btn-primary" :disabled="saving" @click="finalize">Festschreiben</button>
         <button v-if="!isDraft && form.status !== 'cancelled' && form.type === 'invoice'" class="btn-accent" @click="showPay = true">Zahlung erfassen</button>
         <button v-if="!isDraft && form.status !== 'cancelled' && form.type === 'invoice'" class="btn-ghost" @click="creditNote">Gutschrift</button>
         <button v-if="!isDraft && form.status !== 'cancelled' && form.type === 'invoice'" class="btn-ghost text-red-600" @click="storno">Stornieren</button>
+        <button v-if="isDraft && id" class="btn-ghost text-red-600" :disabled="saving" @click="remove">Löschen</button>
       </div>
     </div>
 
