@@ -14,6 +14,17 @@
     RewriteRule ^ index.html [L]
 </IfModule>
 
+# Caching: index.html always revalidated so a deploy is picked up without a
+# hard reload; Vite assets carry a content hash and can be cached for good.
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+    <If "%{REQUEST_URI} =~ m#^/assets/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+</IfModule>
+
 # Sensible Dateien niemals ausliefern (Sicherheitsnetz)
 <FilesMatch "^\.env">
     <IfModule mod_authz_core.c>
