@@ -68,6 +68,18 @@ abstract class AbstractDocument
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $internalNotes = null;
 
+    /** Document-level discount: null (none), 'percent' or 'amount'. */
+    #[ORM\Column(length: 10, nullable: true)]
+    protected ?string $discountType = null;
+
+    /** Percent (e.g. "10.00") or amount in currency units (e.g. "50.00", price mode). */
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, options: ['default' => '0.00'])]
+    protected string $discountValue = '0.00';
+
+    /** Computed document discount in cents (gross or net per price mode). */
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 0])]
+    protected int $discountTotal = 0;
+
     // --- snapshot totals (cents), excluding optional positions ---
     #[ORM\Column(type: Types::INTEGER, options: ['default' => 0])]
     protected int $totalNet = 0;
@@ -299,6 +311,56 @@ abstract class AbstractDocument
         $this->internalNotes = $v;
 
         return $this;
+    }
+
+    public function getDiscountType(): ?string
+    {
+        return $this->discountType;
+    }
+
+    public function setDiscountType(?string $v): static
+    {
+        $this->discountType = in_array($v, ['percent', 'amount'], true) ? $v : null;
+
+        return $this;
+    }
+
+    public function getDiscountValue(): string
+    {
+        return $this->discountValue;
+    }
+
+    public function setDiscountValue(string $v): static
+    {
+        $n = (float) str_replace(',', '.', $v);
+        $this->discountValue = number_format($n, 2, '.', '');
+
+        return $this;
+    }
+
+    public function getDiscountTotal(): int
+    {
+        return $this->discountTotal;
+    }
+
+    public function setDiscountTotal(int $v): static
+    {
+        $this->discountTotal = $v;
+
+        return $this;
+    }
+
+    /** Sum of regular positions before the document discount (cents, price mode). */
+    public function getSubtotal(): int
+    {
+        return ($this->pricesIncludeVat ? $this->totalGross : $this->totalNet) + $this->discountTotal;
+    }
+
+    /** Copy the document-level discount settings from another document. */
+    public function copyDiscountFrom(self $src): void
+    {
+        $this->discountType = $src->discountType;
+        $this->discountValue = $src->discountValue;
     }
 
     public function getTotalNet(): int

@@ -111,6 +111,7 @@ class QuoteController extends ApiController
         $copy->setContactPerson($quote->getContactPerson());
         $copy->setCurrency($quote->getCurrency());
         $copy->setPricesIncludeVat($quote->isPricesIncludeVat());
+        $copy->copyDiscountFrom($quote);
         $copy->setIntroText($quote->getIntroText());
         $copy->setOutroText($quote->getOutroText());
         $copy->setInternalNotes($quote->getInternalNotes());
@@ -136,6 +137,7 @@ class QuoteController extends ApiController
             $item->setQuantity($src->getQuantity());
             $item->setUnit($src->getUnit());
             $item->setUnitPrice($src->getUnitPrice());
+            $item->setDiscountPercent($src->getDiscountPercent());
             $item->setVatRate($src->getVatRate());
             $item->setTaxCategory($src->getTaxCategory());
             $copy->addItem($item);
@@ -247,6 +249,12 @@ class QuoteController extends ApiController
         if (array_key_exists('pricesIncludeVat', $data)) {
             $q->setPricesIncludeVat((bool) $data['pricesIncludeVat']);
         }
+        if (array_key_exists('discountType', $data)) {
+            $q->setDiscountType($data['discountType'] ?: null);
+        }
+        if (array_key_exists('discountValue', $data)) {
+            $q->setDiscountValue((string) ($data['discountValue'] ?? '0'));
+        }
         if (array_key_exists('issueDate', $data) && $data['issueDate']) {
             $q->setIssueDate($this->parseDate($data['issueDate']));
         }
@@ -282,6 +290,7 @@ class QuoteController extends ApiController
             $item->setQuantity((string) ($row['quantity'] ?? '1'));
             $item->setUnit((string) ($row['unit'] ?? 'Stk'));
             $item->setUnitPrice((int) ($row['unitPrice'] ?? 0));
+            $item->setDiscountPercent((string) ($row['discountPercent'] ?? '0'));
             $item->setVatRate((string) ($row['vatRate'] ?? '20.00'));
             $item->setTaxCategory(TaxCategory::from((string) ($row['taxCategory'] ?? 'standard')));
             $q->addItem($item);

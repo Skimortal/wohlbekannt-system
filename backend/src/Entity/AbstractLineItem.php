@@ -45,6 +45,10 @@ abstract class AbstractLineItem
     #[ORM\Column(type: Types::INTEGER, options: ['default' => 0])]
     protected int $unitPrice = 0;
 
+    /** Per-line discount in percent (0–100), applied before tax. */
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2, options: ['default' => '0.00'])]
+    protected string $discountPercent = '0.00';
+
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2, options: ['default' => '20.00'])]
     protected string $vatRate = '20.00';
 
@@ -61,14 +65,15 @@ abstract class AbstractLineItem
     protected int $lineGross = 0;
 
     /**
-     * Recompute the snapshot totals from quantity, unitPrice and vatRate.
+     * Recompute the snapshot totals from quantity, unitPrice, discount and vatRate.
      * Tax is also computed per line for convenience; the authoritative document
      * tax is summed per rate group by the totals service to match legal rounding.
      */
     public function computeTotals(bool $pricesIncludeVat): void
     {
         $rate = (float) $this->vatRate;
-        $raw = $this->unitPrice * (float) $this->quantity;
+        $discount = max(0.0, min(100.0, (float) $this->discountPercent));
+        $raw = $this->unitPrice * (float) $this->quantity * (1 - $discount / 100);
 
         if ($pricesIncludeVat) {
             $this->lineGross = (int) round($raw);
@@ -166,6 +171,19 @@ abstract class AbstractLineItem
     public function setUnitPrice(int $v): static
     {
         $this->unitPrice = $v;
+
+        return $this;
+    }
+
+    public function getDiscountPercent(): string
+    {
+        return $this->discountPercent;
+    }
+
+    public function setDiscountPercent(string $v): static
+    {
+        $n = max(0.0, min(100.0, (float) str_replace(',', '.', $v)));
+        $this->discountPercent = number_format($n, 2, '.', '');
 
         return $this;
     }

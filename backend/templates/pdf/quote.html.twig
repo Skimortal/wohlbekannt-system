@@ -110,7 +110,7 @@
           <td class="r col-qty">
             {% if item.unit == 'pauschal' %}pauschal{% else %}{{ item.quantity|qty }}<br><span class="muted">{{ item.unit }}</span>{% endif %}
           </td>
-          <td class="r col-price">{{ item.unitPrice|money }} {{ quote.currency }}</td>
+          <td class="r col-price">{{ item.unitPrice|money }} {{ quote.currency }}{% if item.discountPercent > 0 %}<div class="tax-note">abzgl. {{ item.discountPercent|qty }} % Rabatt</div>{% endif %}</td>
           <td class="r col-total">
             {% if item.optional %}({{ item.lineGross|money }} {{ quote.currency }}){% else %}<strong>{{ item.lineGross|money }} {{ quote.currency }}</strong>{% endif %}
             <div class="tax-note">{% if item.taxCategory.value == 'standard' %}(Steuer {{ item.vatRate|qty }}%){% else %}({{ item.taxCategory.value }}){% endif %}</div>
@@ -121,6 +121,10 @@
   </table>
 
   <table class="totals" align="right">
+    {% if quote.discountTotal != 0 %}
+      <tr><td class="t-label">Zwischensumme {{ quote.pricesIncludeVat ? 'brutto' : 'netto' }}</td><td class="right">{{ quote.subtotal|money }} {{ quote.currency }}</td></tr>
+      <tr><td class="t-label">Rabatt{% if quote.discountType == 'percent' %} {{ quote.discountValue|qty }} %{% endif %}</td><td class="right">{{ (0 - quote.discountTotal)|money }} {{ quote.currency }}</td></tr>
+    {% endif %}
     <tr><td class="t-label">Gesamtbetrag netto</td><td class="right">{{ quote.totalNet|money }} {{ quote.currency }}</td></tr>
     {% for g in quote.taxBreakdown %}
       {% if g.tax > 0 %}<tr><td class="t-label">zzgl. Umsatzsteuer {{ g.rate|qty }}%</td><td class="right">{{ g.tax|money }} {{ quote.currency }}</td></tr>{% endif %}

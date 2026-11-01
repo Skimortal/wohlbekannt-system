@@ -102,6 +102,7 @@ class InvoiceController extends ApiController
             $invoice->setRecipientName($quote->getRecipientName());
         }
         $invoice->setPricesIncludeVat($quote->isPricesIncludeVat());
+        $invoice->copyDiscountFrom($quote);
         $invoice->setContactPerson($quote->getContactPerson());
 
         foreach ($quote->getItems() as $src) {
@@ -162,6 +163,7 @@ class InvoiceController extends ApiController
         $copy->setContactPerson($invoice->getContactPerson());
         $copy->setCurrency($invoice->getCurrency());
         $copy->setPricesIncludeVat($invoice->isPricesIncludeVat());
+        $copy->copyDiscountFrom($invoice);
         $copy->setIntroText($invoice->getIntroText());
         $copy->setOutroText($invoice->getOutroText());
         $copy->setInternalNotes($invoice->getInternalNotes());
@@ -218,9 +220,16 @@ class InvoiceController extends ApiController
         if (in_array($invoice->getStatus(), [InvoiceStatus::DRAFT, InvoiceStatus::CANCELLED], true)) {
             return $this->json(['error' => 'Für Entwürfe/stornierte Rechnungen sind keine Zahlungen möglich.'], 409);
         }
+        if (InvoiceType::INVOICE !== $invoice->getType()) {
+            return $this->json(['error' => 'Zahlungen sind nur für Rechnungen möglich.'], 409);
+        }
         $data = $this->body($request);
+        $amount = (int) ($data['amount'] ?? 0);
+        if ($amount <= 0) {
+            return $this->json(['error' => 'Bitte einen Betrag größer 0 angeben.'], 422);
+        }
         $payment = new Payment();
-        $payment->setAmount((int) ($data['amount'] ?? 0));
+        $payment->setAmount($amount);
         $payment->setMethod(($data['method'] ?? null) ?: null);
         $payment->setReference(($data['reference'] ?? null) ?: null);
         if (!empty($data['paidAt'])) {
@@ -284,6 +293,7 @@ class InvoiceController extends ApiController
         $doc->setContactPerson($original->getContactPerson());
         $doc->setCurrency($original->getCurrency());
         $doc->setPricesIncludeVat($original->isPricesIncludeVat());
+        $doc->copyDiscountFrom($original);
         $doc->setCancelsInvoice($original);
         $doc->setNumber($this->numbers->next($rangeKey));
         $doc->setStatus(InvoiceStatus::SENT);
@@ -296,6 +306,13 @@ class InvoiceController extends ApiController
             $doc->addItem($item);
         }
         $this->totals->recompute($doc, $doc->getItems());
+
+        // A Storno offsets the original invoice completely — nothing is ever
+        // collected on it, so it is settled right away.
+        if (InvoiceType::CANCELLATION === $type) {
+            $doc->setPaidAmount($doc->getTotalGross());
+            $doc->setStatus(InvoiceStatus::PAID);
+        }
 
         if ($voidOriginal) {
             $original->setStatus(InvoiceStatus::CANCELLED);
@@ -338,6 +355,7 @@ class InvoiceController extends ApiController
         $dst->setQuantity($src->getQuantity());
         $dst->setUnit($src->getUnit());
         $dst->setUnitPrice($src->getUnitPrice());
+        $dst->setDiscountPercent($src->getDiscountPercent());
         $dst->setVatRate($src->getVatRate());
         $dst->setTaxCategory($src->getTaxCategory());
     }
@@ -387,6 +405,12 @@ class InvoiceController extends ApiController
         if (array_key_exists('pricesIncludeVat', $data)) {
             $inv->setPricesIncludeVat((bool) $data['pricesIncludeVat']);
         }
+        if (array_key_exists('discountType', $data)) {
+            $inv->setDiscountType($data['discountType'] ?: null);
+        }
+        if (array_key_exists('discountValue', $data)) {
+            $inv->setDiscountValue((string) ($data['discountValue'] ?? '0'));
+        }
         if (array_key_exists('issueDate', $data) && $data['issueDate']) {
             $inv->setIssueDate($this->parseDate($data['issueDate']));
         }
@@ -428,6 +452,7 @@ class InvoiceController extends ApiController
             $item->setQuantity((string) ($row['quantity'] ?? '1'));
             $item->setUnit((string) ($row['unit'] ?? 'Stk'));
             $item->setUnitPrice((int) ($row['unitPrice'] ?? 0));
+            $item->setDiscountPercent((string) ($row['discountPercent'] ?? '0'));
             $item->setVatRate((string) ($row['vatRate'] ?? '20.00'));
             $item->setTaxCategory(TaxCategory::from((string) ($row['taxCategory'] ?? 'standard')));
             $inv->addItem($item);

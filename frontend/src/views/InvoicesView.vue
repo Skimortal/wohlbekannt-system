@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import Pagination from '../components/Pagination.vue'
+import PaymentModal from '../components/PaymentModal.vue'
 import api from '../api'
 import { eur, formatDate } from '../lib/format'
 
@@ -15,6 +16,15 @@ const type = ref('')
 const page = ref(1)
 const limit = 25
 const total = ref(0)
+const payFor = ref<any | null>(null)
+
+function canPay(i: any) {
+  return i.type === 'invoice' && ['sent', 'partially_paid', 'overdue'].includes(i.status)
+}
+function onPaymentSaved() {
+  payFor.value = null
+  load()
+}
 
 const TYPE_LABEL: Record<string, string> = { invoice: 'Rechnung', credit_note: 'Gutschrift', cancellation: 'Storno' }
 const STATUS = [
@@ -93,6 +103,7 @@ onMounted(load)
               <td class="td text-right tabular-nums">{{ eur(i.totalGross, i.currency) }}</td>
               <td class="td text-right tabular-nums">{{ i.openAmount > 0 ? eur(i.openAmount, i.currency) : '—' }}</td>
               <td class="td text-right whitespace-nowrap">
+                <button v-if="canPay(i)" class="btn-ghost px-2 py-1 text-xs" title="Zahlungseingang erfassen" @click.stop="payFor = i">Zahlung</button>
                 <button class="btn-ghost px-2 py-1 text-xs" title="Als neuen Entwurf kopieren" @click.stop="duplicate(i.id)">Kopieren</button>
                 <button v-if="i.status === 'draft'" class="btn-ghost px-2 py-1 text-xs text-red-600" title="Entwurf löschen" @click.stop="remove(i.id)">Löschen</button>
               </td>
@@ -105,10 +116,10 @@ onMounted(load)
 
     <!-- mobile cards -->
     <div class="space-y-3 lg:hidden">
-      <button
+      <div
         v-for="i in invoices"
         :key="i.id"
-        class="card w-full p-4 text-left"
+        class="card w-full cursor-pointer p-4 text-left"
         @click="router.push(`/rechnungen/${i.id}`)"
       >
         <div class="flex items-center justify-between">
@@ -121,10 +132,15 @@ onMounted(load)
           <span class="text-ink-soft">{{ i.openAmount > 0 ? `offen ${eur(i.openAmount, i.currency)}` : 'beglichen' }}</span>
           <span class="tabular-nums font-medium text-ink">{{ eur(i.totalGross, i.currency) }}</span>
         </div>
-      </button>
+        <div v-if="canPay(i)" class="mt-3 flex justify-end">
+          <button class="btn-secondary px-3 py-1 text-xs" @click.stop="payFor = i">Zahlung erfassen</button>
+        </div>
+      </div>
       <p v-if="!invoices.length" class="py-6 text-center text-sm text-ink-soft">Keine Rechnungen gefunden.</p>
     </div>
 
     <Pagination :page="page" :limit="limit" :total="total" @go="goPage" />
+
+    <PaymentModal v-if="payFor" :invoice="payFor" @close="payFor = null" @saved="onPaymentSaved" />
   </AppShell>
 </template>

@@ -4,9 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import AppShell from '../components/AppShell.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import Modal from '../components/Modal.vue'
+import TotalsCard from '../components/TotalsCard.vue'
 import api from '../api'
 import { centsToInput, eur, isoDate, toCents } from '../lib/format'
-import { computeTotals, parseQty, type EditorItem } from '../lib/totals'
+import { computeTotals, decimalToInput, parseDecimal, parseQty, type EditorItem } from '../lib/totals'
 import { downloadPdf, openPdf } from '../lib/pdf'
 
 const route = useRoute()
@@ -34,9 +35,10 @@ const form = reactive<any>({
   status: 'draft',
   number: null,
   items: [] as EditorItem[],
+  discount: { type: '', value: '' },
 })
 
-const totals = computed(() => computeTotals(form.items, form.pricesIncludeVat))
+const totals = computed(() => computeTotals(form.items, form.pricesIncludeVat, form.discount))
 const isDraft = computed(() => form.status === 'draft')
 // Entwürfe UND versendete Angebote sind bearbeitbar (kleine Nachkorrekturen);
 // angenommene/abgelehnte bleiben gesperrt. Versendete speichern manuell (kein Autosave).
@@ -98,7 +100,7 @@ onBeforeUnmount(() => {
 })
 
 function newItem(optional = false): EditorItem {
-  return { optional, title: '', description: '', quantity: '1', unit: 'Stk', priceInput: '0,00', vatRate: form.defaultVatRate || '20.00', taxCategory: 'standard' }
+  return { optional, title: '', description: '', quantity: '1', unit: 'Stk', priceInput: '0,00', discountInput: '', vatRate: form.defaultVatRate || '20.00', taxCategory: 'standard' }
 }
 
 function addItem(optional = false) {
@@ -109,7 +111,7 @@ function addFromArticle(e: Event) {
   ;(e.target as HTMLSelectElement).value = ''
   const a = articles.value.find((x) => x.id === aid)
   if (!a) return
-  form.items.push({ optional: false, title: a.name, description: a.description || '', quantity: '1', unit: a.unit, priceInput: centsToInput(a.unitPrice), vatRate: a.vatRate, taxCategory: a.taxCategory })
+  form.items.push({ optional: false, title: a.name, description: a.description || '', quantity: '1', unit: a.unit, priceInput: centsToInput(a.unitPrice), discountInput: '', vatRate: a.vatRate, taxCategory: a.taxCategory })
 }
 function removeItem(i: number) {
   form.items.splice(i, 1)
@@ -135,6 +137,8 @@ function payload() {
     validUntil: form.validUntil || null,
     introText: form.introText,
     outroText: form.outroText,
+    discountType: form.discount.type || null,
+    discountValue: String(parseDecimal(form.discount.value)),
     items: form.items.map((it: EditorItem, idx: number) => ({
       position: idx,
       optional: it.optional,
@@ -143,6 +147,7 @@ function payload() {
       quantity: String(parseQty(it.quantity)),
       unit: it.unit,
       unitPrice: toCents(it.priceInput),
+      discountPercent: String(parseDecimal(it.discountInput)),
       vatRate: String(it.vatRate).replace(',', '.'),
       taxCategory: it.taxCategory,
     })),
@@ -245,10 +250,12 @@ function apply(q: any) {
   form.validUntil = isoDate(q.validUntil)
   form.introText = q.introText || ''
   form.outroText = q.outroText || ''
+  form.discount = { type: q.discountType || '', value: decimalToInput(q.discountValue) }
   form.items = (q.items || []).map((it: any): EditorItem => ({
     optional: it.optional, title: it.title, description: it.description || '',
     quantity: String(it.quantity).replace('.', ','), unit: it.unit,
-    priceInput: centsToInput(it.unitPrice), vatRate: it.vatRate, taxCategory: it.taxCategory,
+    priceInput: centsToInput(it.unitPrice), discountInput: decimalToInput(it.discountPercent),
+    vatRate: it.vatRate, taxCategory: it.taxCategory,
   }))
   optionalItems.value = (q.items || [])
     .filter((it: any) => it.optional)
@@ -358,10 +365,11 @@ onMounted(async () => {
               </template>
             </div>
             <textarea v-model="it.description" rows="2" class="input mb-2 text-sm" placeholder="Beschreibung (optional)" :disabled="!editable"></textarea>
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
               <div><label class="label !text-xs">Menge</label><input v-model="it.quantity" class="input text-right tabular-nums" :disabled="!editable" /></div>
               <div><label class="label !text-xs">Einheit</label><input v-model="it.unit" class="input" :disabled="!editable" /></div>
               <div><label class="label !text-xs">EP ({{ form.pricesIncludeVat ? 'brutto' : 'netto' }})</label><input v-model="it.priceInput" class="input text-right tabular-nums" :disabled="!editable" /></div>
+              <div><label class="label !text-xs">Rabatt %</label><input v-model="it.discountInput" class="input text-right tabular-nums" placeholder="0" :disabled="!editable" /></div>
               <div><label class="label !text-xs">USt %</label><input v-model="it.vatRate" class="input text-right" :disabled="!editable" /></div>
             </div>
             <label v-if="editable" class="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
@@ -373,18 +381,11 @@ onMounted(async () => {
         </div>
 
         <!-- totals -->
-        <div class="card ml-auto max-w-md p-6">
-          <div class="space-y-1.5 text-sm">
-            <div class="flex justify-between"><span class="text-ink-soft">Gesamtbetrag netto</span><span class="tabular-nums">{{ eur(totals.net, form.currency) }}</span></div>
-            <div v-for="g in totals.breakdown" :key="g.rate" class="flex justify-between">
-              <span class="text-ink-soft">zzgl. USt {{ g.rate }}%</span><span class="tabular-nums">{{ eur(g.tax, form.currency) }}</span>
-            </div>
-            <div class="flex justify-between border-t border-ink pt-2 font-semibold"><span>Gesamtbetrag brutto</span><span class="tabular-nums">{{ eur(totals.gross, form.currency) }}</span></div>
-            <div v-if="totals.optionalGross > 0" class="flex justify-between pt-1 text-ink-soft">
-              <span>Summe optionaler Positionen brutto</span><span class="tabular-nums">{{ eur(totals.optionalGross, form.currency) }}</span>
-            </div>
+        <TotalsCard v-model:discount="form.discount" :totals="totals" :currency="form.currency" :prices-include-vat="form.pricesIncludeVat" :editable="editable">
+          <div v-if="totals.optionalGross > 0" class="flex justify-between pt-1 text-ink-soft">
+            <span>Summe optionaler Positionen brutto</span><span class="tabular-nums">{{ eur(totals.optionalGross, form.currency) }}</span>
           </div>
-        </div>
+        </TotalsCard>
       </div>
     </div>
 
