@@ -66,6 +66,11 @@ class Invoice extends AbstractDocument
 
     public function getOpenAmount(): int
     {
+        // A voided invoice is offset by its Storno — nothing is owed anymore.
+        if (InvoiceStatus::CANCELLED === $this->status) {
+            return 0;
+        }
+
         return $this->totalGross - $this->paidAmount;
     }
 
